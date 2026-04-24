@@ -1,0 +1,2689 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<style id="antiClickjack">html{display:none !important;}</style>
+<script>
+(function(){
+  if (self === top) {
+    var s = document.getElementById('antiClickjack');
+    if (s && s.parentNode) s.parentNode.removeChild(s);
+  } else {
+    try { top.location = self.location; } catch (e) {}
+    try { document.documentElement.innerHTML = ''; } catch (e) {}
+  }
+})();
+</script>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="referrer" content="no-referrer">
+<meta name="theme-color" content="#1a1a1a">
+<meta name="description" content="Tsui Pond v0.5.0 — 4種族が泳ぐ静かな池。ブラウザで完結、外部通信なし。">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self' data:; connect-src 'none'; frame-ancestors 'none'; base-uri 'none'; form-action 'none';">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='6' fill='%231a1a1a'/%3E%3Ccircle cx='16' cy='16' r='9' fill='none' stroke='%237dd3c0' stroke-width='1.5'/%3E%3Ccircle cx='12' cy='13' r='1.8' fill='%237dd3c0'/%3E%3Ccircle cx='20' cy='16' r='1.2' fill='%23e8b842'/%3E%3Ccircle cx='15' cy='20' r='1.4' fill='%23d17ac0'/%3E%3Ccircle cx='22' cy='21' r='1' fill='%239d8ae8'/%3E%3C/svg%3E">
+<title>Tsui Pond — 静かな池 v0.5.0</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg: #1a1a1a; --bg-card: #1e1e1e;
+    --fg: #e4e4e4; --fg-dim: #888; --fg-faint: #6f6f6f;
+    --accent: #7dd3c0; --accent-plus: #e8b842;
+    --glow-color: transparent;
+    --border: #2a2a2a; --border-strong: #3a3a3a;
+
+    --species-1: #7dd3c0; --species-2: #e8b842;
+    --species-3: #d17ac0; --species-4: #9d8ae8;
+    --danger:    #ff6b6b;
+    --tool-heal: #7dd3c0; --tool-peace:#9d8ae8;
+    --food-color:#e8b842;
+    --season-color: #ff8eb3;
+  }
+
+  html[data-theme="green"]  {
+    --accent:#39ff77; --accent-plus:#ffb000; --glow-color:#39ff77;
+    --species-1:#39ff77; --species-2:#ffb000; --species-3:#ff5799; --species-4:#7ce8ff;
+    --tool-heal:#39ff77; --tool-peace:#7ce8ff; --food-color:#ffb000; --season-color:#ff5799;
+  }
+  html[data-theme="amber"]  {
+    --accent:#ffb000; --accent-plus:#ff26b3; --glow-color:#ffb000;
+    --species-1:#ffb000; --species-2:#ffe066; --species-3:#ff26b3; --species-4:#a07cff;
+    --tool-heal:#ffb000; --tool-peace:#a07cff; --food-color:#ffe066; --season-color:#ff26b3;
+  }
+  html[data-theme="red"]    {
+    --accent:#ffc0b8; --accent-plus:#39ff77; --glow-color:#ff2020;
+    --species-1:#ffc0b8; --species-2:#ffe27a; --species-3:#ff5599; --species-4:#8db8ff;
+    --tool-heal:#ffc0b8; --tool-peace:#8db8ff; --food-color:#ffe27a; --season-color:#ff5599;
+  }
+  html[data-theme="pink"]   {
+    --accent:#ffc8f0; --accent-plus:#39ff77; --glow-color:#ff26b3;
+    --species-1:#ffc8f0; --species-2:#c6ff7a; --species-3:#ff7bbb; --species-4:#7ac0ff;
+    --tool-heal:#ffc8f0; --tool-peace:#7ac0ff; --food-color:#c6ff7a; --season-color:#ff7bbb;
+  }
+  html[data-theme="cyber"]  {
+    --accent:#B2FFCA; --accent-plus:#ff26b3; --glow-color:#39ff77;
+    --species-1:#B2FFCA; --species-2:#ffe066; --species-3:#ff26b3; --species-4:#99c8ff;
+    --tool-heal:#B2FFCA; --tool-peace:#99c8ff; --food-color:#ffe066; --season-color:#ff26b3;
+  }
+
+  html[data-theme] header h1,
+  html[data-theme] .theme-switch button.active {
+    text-shadow: 0 0 10px var(--glow-color), 0 0 22px var(--glow-color);
+  }
+
+  html { background: var(--bg); height: 100%; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Hiragino Sans", "Yu Gothic UI", sans-serif;
+    background: var(--bg); color: var(--fg);
+    min-height: 100vh; padding: 20px 16px 40px;
+    -webkit-font-smoothing: antialiased; line-height: 1.6;
+  }
+  .mono, code { font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace; }
+  .container { max-width: 960px; margin: 0 auto; }
+
+  header { display: flex; align-items: baseline; gap: 14px; margin-bottom: 18px; flex-wrap: wrap; }
+  header h1 { font-size: 26px; font-weight: 600; letter-spacing: 0.03em; }
+  header .subtitle { color: var(--fg-dim); font-family: ui-monospace, monospace; font-size: 12px; letter-spacing: 0.04em; }
+
+  .theme-switch { margin-left: auto; display: flex; gap: 2px; font-family: ui-monospace, monospace; font-size: 10px; }
+  .theme-switch button {
+    background: transparent; color: var(--fg-faint); border: 1px solid var(--border);
+    padding: 4px 9px; cursor: pointer; text-transform: uppercase; letter-spacing: 0.1em;
+    transition: color 0.15s, border-color 0.15s;
+  }
+  .theme-switch button.active { color: var(--accent); border-color: var(--accent); }
+  .theme-switch button:hover { color: var(--fg); border-color: var(--border-strong); }
+
+  /* About button */
+  .about-btn {
+    background: transparent;
+    color: var(--fg-dim);
+    border: 1px solid var(--border);
+    padding: 3px 10px;
+    font-family: ui-monospace, monospace;
+    font-size: 11px;
+    cursor: pointer;
+    margin-left: 8px;
+    transition: color 0.15s, border-color 0.15s;
+  }
+  .about-btn:hover { color: var(--fg); border-color: var(--border-strong); }
+
+  /* About modal */
+  .modal-backdrop {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.75);
+    display: none;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+    padding: 20px;
+    overflow-y: auto;
+  }
+  .modal-backdrop.open { display: flex; }
+  .modal {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    max-width: 560px;
+    width: 100%;
+    max-height: 90vh;
+    overflow-y: auto;
+    padding: 28px 32px;
+    position: relative;
+    color: var(--fg);
+    font-size: 13px;
+    line-height: 1.65;
+  }
+  .modal h2 {
+    font-family: Georgia, "Iowan Old Style", "Hiragino Mincho ProN", "Yu Mincho", serif;
+    font-size: 20px;
+    font-weight: 400;
+    letter-spacing: -0.2px;
+    margin-bottom: 2px;
+    color: var(--fg);
+  }
+  .modal h3 {
+    font-family: ui-monospace, monospace;
+    font-size: 10px;
+    font-weight: normal;
+    letter-spacing: 0.15em;
+    color: var(--fg-faint);
+    text-transform: uppercase;
+    margin-top: 18px;
+    margin-bottom: 6px;
+  }
+  .modal p {
+    font-size: 12.5px;
+    color: var(--fg);
+    margin-bottom: 8px;
+  }
+  .modal .modal-version {
+    font-family: ui-monospace, monospace;
+    font-size: 11px;
+    color: var(--fg-faint);
+    margin-bottom: 16px;
+    letter-spacing: 0.05em;
+  }
+  .modal pre {
+    font-family: ui-monospace, monospace;
+    font-size: 10.5px;
+    color: var(--fg-faint);
+    line-height: 1.5;
+    white-space: pre-wrap;
+    word-break: break-word;
+    background: rgba(255, 255, 255, 0.02);
+    border: 1px solid var(--border);
+    padding: 10px 12px;
+    border-radius: 2px;
+  }
+  .modal a {
+    color: var(--accent);
+    text-decoration: none;
+    border-bottom: 1px dotted;
+    transition: opacity 0.15s;
+  }
+  .modal a:hover { opacity: 0.7; }
+  .modal-close {
+    position: absolute;
+    top: 12px;
+    right: 12px;
+    background: transparent;
+    color: var(--fg-faint);
+    border: 1px solid var(--border);
+    padding: 4px 10px;
+    cursor: pointer;
+    font-family: ui-monospace, monospace;
+    font-size: 10px;
+    letter-spacing: 0.1em;
+    transition: color 0.15s, border-color 0.15s;
+  }
+  .modal-close:hover {
+    color: var(--fg);
+    border-color: var(--fg-faint);
+  }
+
+  .lang-switch { margin-left: auto; display: flex; gap: 2px; font-family: ui-monospace, monospace; font-size: 10px; }
+  .lang-switch + .theme-switch { margin-left: 0; }
+  .lang-switch button {
+    background: transparent; color: var(--fg-faint); border: 1px solid var(--border);
+    padding: 4px 9px; cursor: pointer; text-transform: uppercase; letter-spacing: 0.1em;
+    transition: color 0.15s, border-color 0.15s;
+  }
+  .lang-switch button.active { color: var(--accent); border-color: var(--accent); }
+  .lang-switch button:hover { color: var(--fg); border-color: var(--border-strong); }
+
+  .stats {
+    display: grid; grid-template-columns: repeat(auto-fit, minmax(92px, 1fr));
+    gap: 6px; margin-bottom: 10px;
+    font-family: ui-monospace, monospace; font-size: 11px;
+  }
+  .stat {
+    background: var(--bg-card); border: 1px solid var(--border);
+    padding: 7px 12px; display: flex; justify-content: space-between; align-items: center;
+    letter-spacing: 0.04em;
+  }
+  .stat .label { color: var(--fg-faint); text-transform: uppercase; letter-spacing: 0.1em; font-size: 10px; }
+  .stat .val { color: var(--fg); font-weight: 600; font-variant-numeric: tabular-nums; }
+  .stat.s1 .val { color: var(--species-1); }
+  .stat.s2 .val { color: var(--species-2); }
+  .stat.s3 .val { color: var(--species-3); }
+  .stat.s4 .val { color: var(--species-4); }
+  .stat.season .val { color: var(--fg-faint); }
+  .stat.season.active .val { color: var(--season-color); }
+  .stat.season.active .label { color: var(--season-color); opacity: 0.6; }
+
+  .canvas-wrap {
+    position: relative; background: #0a0a0a;
+    border: 1px solid var(--border); overflow: hidden;
+    aspect-ratio: 16 / 10;
+  }
+  canvas { display: block; width: 100%; height: 100%; cursor: crosshair; touch-action: none; }
+  html[data-theme="cyber"] .canvas-wrap::after {
+    content: ""; position: absolute; inset: 0; pointer-events: none;
+    background: repeating-linear-gradient(to bottom,
+      transparent 0, transparent 2px,
+      rgba(0,0,0,0.18) 2px, rgba(0,0,0,0.18) 3px);
+    mix-blend-mode: multiply;
+  }
+  html[data-theme] .canvas-wrap { box-shadow: 0 0 20px -8px var(--glow-color, transparent); }
+
+  .hover-info {
+    position: absolute; bottom: 8px; left: 8px;
+    font-family: ui-monospace, monospace; font-size: 10.5px;
+    color: var(--fg-dim); letter-spacing: 0.04em;
+    background: rgba(10,10,10,0.7);
+    padding: 4px 8px; border: 1px solid var(--border);
+    pointer-events: none; opacity: 0; transition: opacity 0.15s;
+    max-width: 90%;
+  }
+  .hover-info.show { opacity: 1; }
+  .hover-info .id { color: var(--fg); }
+  .hover-info .sep { color: var(--fg-faint); margin: 0 6px; }
+
+  .tool-status {
+    position: absolute; top: 8px; right: 8px;
+    font-family: ui-monospace, monospace; font-size: 10.5px;
+    color: var(--fg-dim); letter-spacing: 0.04em;
+    background: rgba(10,10,10,0.7);
+    padding: 4px 10px; border: 1px solid var(--border);
+    pointer-events: none;
+  }
+  .tool-status .name { color: var(--fg); font-weight: 600; }
+  .tool-status .cost { color: var(--fg-faint); margin-left: 6px; }
+
+  .season-badge {
+    position: absolute; top: 8px; left: 8px;
+    font-family: ui-monospace, monospace; font-size: 10.5px;
+    color: var(--season-color); letter-spacing: 0.06em;
+    background: rgba(10,10,10,0.7);
+    padding: 4px 10px; border: 1px solid var(--season-color);
+    pointer-events: none; opacity: 0; transition: opacity 0.4s;
+  }
+  .season-badge.show { opacity: 0.85; }
+
+  .control-row {
+    display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px; align-items: center;
+    font-family: ui-monospace, monospace; font-size: 11px;
+  }
+  .control-row .group-label {
+    color: var(--fg-faint); text-transform: uppercase;
+    letter-spacing: 0.1em; font-size: 9.5px; margin-right: 2px;
+  }
+  .control-row button, .control-row select {
+    background: var(--bg-card); color: var(--fg); border: 1px solid var(--border);
+    padding: 6px 11px; cursor: pointer; font-family: inherit; font-size: inherit;
+    letter-spacing: 0.06em; transition: color 0.12s, border-color 0.12s;
+  }
+  .control-row button:hover { border-color: var(--border-strong); color: var(--accent); }
+  .control-row button.active { border-color: currentColor; }
+  .control-row button.sp1.active { color: var(--species-1); }
+  .control-row button.sp2.active { color: var(--species-2); }
+  .control-row button.sp3.active { color: var(--species-3); }
+  .control-row button.sp4.active { color: var(--species-4); }
+  .control-row button.tool-release.active { color: var(--accent); }
+  .control-row button.tool-summon.active  { color: var(--accent); }
+  .control-row button.tool-food.active    { color: var(--food-color); }
+  .control-row button.tool-heal.active    { color: var(--tool-heal); }
+  .control-row button.tool-peace.active   { color: var(--tool-peace); }
+  .control-row .sep { color: var(--fg-faint); margin: 0 4px; user-select: none; }
+  .control-row label { color: var(--fg-dim); display: inline-flex; align-items: center; gap: 6px; }
+  .control-row input[type="range"] { width: 110px; accent-color: var(--accent); }
+  .control-row .cost { color: var(--fg-faint); font-size: 9.5px; margin-left: 4px; }
+
+  .help {
+    margin-top: 8px; color: var(--fg-faint);
+    font-family: ui-monospace, monospace; font-size: 10px;
+    letter-spacing: 0.04em; line-height: 1.7;
+  }
+  .help kbd {
+    background: var(--bg-card); border: 1px solid var(--border);
+    padding: 0 4px; font-size: 9.5px; color: var(--fg-dim);
+  }
+
+  .log {
+    margin-top: 14px; background: var(--bg-card); border: 1px solid var(--border);
+    padding: 10px 14px; font-family: ui-monospace, monospace;
+    font-size: 11px; color: var(--fg-dim);
+    max-height: 150px; overflow-y: auto; line-height: 1.8; letter-spacing: 0.02em;
+  }
+  .log .entry { opacity: 0.75; }
+  .log .entry.new { opacity: 1; color: var(--fg); }
+  .log .prefix { color: var(--fg-faint); }
+  .log .s1 { color: var(--species-1); }
+  .log .s2 { color: var(--species-2); }
+  .log .s3 { color: var(--species-3); }
+  .log .s4 { color: var(--species-4); }
+  .log .ev-heal { color: var(--tool-heal); }
+  .log .ev-peace { color: var(--tool-peace); }
+  .log .ev-food { color: var(--food-color); }
+  .log .ev-season { color: var(--season-color); }
+  .log .ev-aura { color: var(--species-1); }
+  .log .ev-sick { color: #c49dd8; }
+  .hover-info .ev-sick { color: #c49dd8; }
+
+  footer {
+    margin-top: 24px; padding-top: 14px; border-top: 1px solid var(--border);
+    color: var(--fg-faint); font-family: ui-monospace, monospace; font-size: 10px;
+    display: flex; justify-content: space-between; flex-wrap: wrap; gap: 8px;
+    letter-spacing: 0.04em;
+  }
+
+  button:focus-visible, select:focus-visible, input:focus-visible {
+    outline: 2px solid var(--accent); outline-offset: 2px;
+  }
+
+  @media (max-width: 540px) {
+    header h1 { font-size: 22px; }
+    .theme-switch { margin-left: 0; width: 100%; flex-wrap: wrap; }
+    .control-row { font-size: 10.5px; }
+    .control-row button { padding: 5px 8px; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    * { transition: none !important; animation: none !important; }
+  }
+</style>
+</head>
+<body>
+<div class="container">
+
+  <header>
+    <h1>Tsui Pond</h1>
+    <span class="subtitle" id="subtitle">// 4種が泳ぐ静かな池 · v0.5.0</span>
+    <div class="lang-switch" role="group" aria-label="language">
+      <button type="button" data-lang="ja" class="active">JA</button>
+      <button type="button" data-lang="en">EN</button>
+    </div>
+    <div class="theme-switch" role="group" aria-label="theme">
+      <button type="button" data-theme="calm" class="active">calm</button>
+      <button type="button" data-theme="green">green</button>
+      <button type="button" data-theme="amber">amber</button>
+      <button type="button" data-theme="red">red</button>
+      <button type="button" data-theme="pink">pink</button>
+      <button type="button" data-theme="cyber">cyber</button>
+    </div>
+    <button type="button" id="btn-about" class="about-btn" title="About" aria-label="About">?</button>
+  </header>
+
+  <!-- About modal -->
+  <div class="modal-backdrop" id="modal-backdrop" role="dialog" aria-modal="true" aria-labelledby="modal-title">
+    <div class="modal" id="modal">
+      <button class="modal-close" id="modal-close" aria-label="閉じる">Close</button>
+      <h2 id="modal-title">Tsui Pond</h2>
+      <p class="modal-version">Version 0.5.0</p>
+
+      <h3>About</h3>
+      <p>よくわからない何かが泳いでいる池。4種の生き物が繁殖して、喧嘩して、流行り病で死んだりする。目的はなく、ただ眺めるか、放流して観察するための道具です。</p>
+      <p>実用性を考えない Tsui~ シリーズの道具のひとつです。</p>
+
+      <h3>How to Play</h3>
+      <p>下のツールバーで種を選び、水面をクリックすると放流できます。シードを消費し、餌を撒く、癒す、鎮める、招集するなどの介入も可能。シードが足りなくなったら時間経過で回復します。そもそもの目的は特にありません。</p>
+
+      <h3>Privacy</h3>
+      <p>外部へのデータ送信は一切ありません。全データは端末内に留まり、サーバーや外部サービスへ送信されることはありません。</p>
+      <p>ブラウザ内 localStorage には、言語・テーマ設定に加えて、池の状態を再開するための情報（生き物の種類・位置・HP・空腹度・シード数・選択中の道具・シミュレーション時刻など）が保存されます。氏名、メールアドレス、端末識別子などの個人情報は一切保存しません。</p>
+      <p>保存データはこのブラウザ内にのみ残り、他のデバイスや外部には送信されません。履歴ログの表示内容は永続保存されません。</p>
+
+      <h3>Disclaimer</h3>
+      <p>本アプリは現状有姿で提供され、動作の正確性・可用性について一切の保証はありません。ご利用は自己責任にてお願いします。</p>
+
+      <h3>License</h3>
+      <pre>MIT License
+
+Copyright (c) 2026 <a href="https://hajimetwi3.github.io/hajimetwi3/" target="_blank" rel="noopener noreferrer">Hajime Tsui</a>
+
+Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.</pre>
+
+      <h3>Third-Party</h3>
+      <p>外部ライブラリ・外部フォント・外部リソースへの依存はありません（システムフォントのみ使用）。</p>
+    </div>
+  </div>
+
+  <div class="stats">
+    <div class="stat s1"><span class="label" data-i18n="stat.drift">drift</span><span class="val" id="stat-1">0</span></div>
+    <div class="stat s2"><span class="label" data-i18n="stat.dart">dart</span><span class="val" id="stat-2">0</span></div>
+    <div class="stat s3"><span class="label" data-i18n="stat.pack">pack</span><span class="val" id="stat-3">0</span></div>
+    <div class="stat s4"><span class="label" data-i18n="stat.guard">guard</span><span class="val" id="stat-4">0</span></div>
+    <div class="stat"><span class="label" data-i18n="stat.seed">seed</span><span class="val" id="stat-seed">10</span></div>
+    <div class="stat season" id="stat-season-box"><span class="label" data-i18n="stat.season">season</span><span class="val" id="stat-season">—</span></div>
+  </div>
+
+  <div class="canvas-wrap">
+    <canvas id="pond" aria-label="pond canvas"></canvas>
+    <div class="season-badge" id="season-badge" data-i18n="badge.season">// mating season</div>
+    <div class="tool-status" id="tool-status"><span class="name">release drift</span><span class="cost">·2</span></div>
+    <div class="hover-info" id="hover-info"></div>
+  </div>
+
+  <div class="control-row">
+    <button type="button" id="btn-play">❚❚ pause</button>
+    <span class="sep">|</span>
+    <label><span data-i18n="ctl.speed">speed</span> <input type="range" id="speed" min="10" max="200" value="40" step="5"><span id="speed-val" style="color:var(--fg-faint); font-size:10px; min-width:40px;">0.40×</span></label>
+    <span class="sep">|</span>
+    <button type="button" id="btn-clear" data-i18n="ctl.clear">clear</button>
+    <button type="button" id="btn-seed" data-i18n="ctl.seedPond">seed pond</button>
+  </div>
+
+  <div class="control-row">
+    <span class="group-label" data-i18n="grp.species">species</span>
+    <button type="button" id="sp-1" class="sp1 active" data-i18n="sp.drift" data-i18n-title="tip.drift" title="slow · peaceful · healing aura (heals self too)">drift</button>
+    <button type="button" id="sp-2" class="sp2"        data-i18n="sp.dart"  data-i18n-title="tip.dart"  title="fast · skittish · flees everyone">dart</button>
+    <button type="button" id="sp-3" class="sp3"        data-i18n="sp.pack"  data-i18n-title="tip.pack"  title="flocks strongly · brave in group">pack</button>
+    <button type="button" id="sp-4" class="sp4"        data-i18n="sp.guard" data-i18n-title="tip.guard" title="solitary · territorial · aggressive · stubborn">guard</button>
+  </div>
+
+  <div class="control-row">
+    <span class="group-label" data-i18n="grp.tool">tool</span>
+    <button type="button" id="tool-release" class="tool-release active" data-i18n="tool.release" data-i18n-title="tip.release" title="release a new individual">release</button>
+    <button type="button" id="tool-summon"  class="tool-summon"         data-i18n="tool.summon"  data-i18n-title="tip.summon"  title="call selected species to click point">summon</button>
+    <button type="button" id="tool-food"    class="tool-food"           data-i18n="tool.food"    data-i18n-title="tip.food"    title="drop a visible food crumb (full satiation on contact)">food</button>
+    <button type="button" id="tool-heal"    class="tool-heal"           data-i18n="tool.heal"    data-i18n-title="tip.heal"    title="area heal HP and end fights">heal</button>
+    <button type="button" id="tool-peace"   class="tool-peace"          data-i18n="tool.peace"   data-i18n-title="tip.peace"   title="stop nearby fights for 15s">peace</button>
+  </div>
+
+  <p class="help" id="help-text">
+    // click pond to apply current tool · hover over individual for info · seeds refill 1/10s<br>
+    // <kbd>1</kbd>–<kbd>4</kbd> species · <kbd>q w e r t</kbd> tools · <kbd>space</kbd> pause · <kbd>shift+R</kbd> reseed · <kbd>c</kbd> clear
+  </p>
+
+  <div class="log mono" id="log" aria-live="polite"></div>
+
+  <footer>
+    <span>Tsui Pond v0.5.0 · no network · no tracking · data: localStorage only</span>
+    <span>hp-based aggression · combat adrenaline · individual temperament</span>
+  </footer>
+
+</div>
+
+<script>
+(function(){
+  'use strict';
+
+  // ============================================================
+  // Config
+  // ============================================================
+  const POND_W = 640, POND_H = 400;
+  const POP_CAP = 60;
+  const SEED_MAX = 10;
+  const SEED_REGEN_MS = 10000;
+  const SAVE_KEY = 'tsui-pond-v0.5.0';
+  const SAVE_VERSION = 4;
+  const THINK_INTERVAL_MS = 80;
+  const TRAIL_LEN = 7;
+  const FOOD_LIFE_MS = 30000;
+  const FOOD_RADIUS = 2.8;
+
+  // Hunger tuning (v1.3: half of v1.2)
+  const HUNGER_RATE = 0.008 / 6;
+  const HUNGER_HUNGRY_THRESHOLD = 55;     // earlier seek food
+  const HUNGER_STARVE_THRESHOLD = 90;
+  const HUNGER_FIGHT_BREAK = 80;
+  const HUNGER_FOOD_PRIORITY = 70;        // partial flee override: if feeder closer than threat (E)
+  const STARVE_HP_DRAIN = 0.005;
+
+  // Health tuning (v1.3: natural regen + earlier rest)
+  const REST_HP_FRACTION = 0.55;          // earlier rest seeking
+  const NATURAL_HEAL_RATE = 0.001;        // 1 HP/sec sim, when not fighting/starving
+
+  // Combat tuning
+  const FLEE_HP_FRACTION = 0.25;
+  const FIGHT_BREAK_HP_BASE = 0.6;
+  const FIGHT_BREAK_HUNGER_BASE = 0.7;
+
+  // Drift aura tiers (v1.3: fight-break only for elders)
+  const DRIFT_AURA_BASIC_AGE = 8000;      // heal + passive aggression reduction
+  const DRIFT_AURA_ELDER_AGE = 30000;     // can break ongoing fights
+
+  // Intraspecies aggression (v1.5) — only when a species dominates the pond
+  const INTRA_DOMINANCE_RATIO = 0.5;      // strict ">" this ratio triggers intra-species fights
+  const INTRA_AGG_MUL = 0.2;              // multiplier on species.aggression for intra-fights
+  const INTRA_FLEE_RADIUS_MUL = 1.0;      // detect same-species rivals at full fleeRadius
+  const INTRA_CHECK_COOLDOWN_MS = 5000;    // v1.7: per-agent cooldown between intra-fight rolls
+
+  // Combat rewards (v1.7)
+  const KILL_HUNGER_REWARD = 100;          // hunger reduction on final blow
+  const THREATEN_REPEL_HP = 5;             // HP gained when target flees out of range
+  const THREATEN_REPEL_HUNGER = 10;        // hunger reduction when target flees out of range
+  const THREATEN_REWARD_CD_MS = 30000;     // sim-ms between threaten-repel rewards per guard
+
+  // Experience growth (v1.7) — kills accumulate into speed/size multipliers, capped
+  const KILL_GROWTH_PER = 0.015;           // per-kill multiplier bonus
+  const KILL_GROWTH_CAP = 1.00;            // v1.8: max +100% from kills (was +50%)
+
+  // Plague (v1.7) — same-species contagion, triggered when a species is crowded
+  // v1.10: per-species thresholds (was total pond population)
+  const PLAGUE_SPECIES_THRESHOLD = 20;    // a species with more than this many can have outbreaks
+  const PLAGUE_SPECIES_DOUBLE = 30;       // a species with more than this doubles its outbreak rate
+  const PLAGUE_CHECK_MS = 4000;           // sim-ms between outbreak dice rolls
+  const PLAGUE_OUTBREAK_PROB = 0.08;      // per check, per eligible species
+  const PLAGUE_INFECT_RADIUS = 30;
+  const PLAGUE_INFECT_PROB_BASE = 0.02;   // per think per infected carrier per susceptible in range
+  // v1.12: per-individual severity — set once on infection, in HP/ms
+  const PLAGUE_HP_DRAIN_MIN = 0.0002;     // 0.2 HP/sec sim (mild)
+  const PLAGUE_HP_DRAIN_MAX = 0.0008;     // 0.8 HP/sec sim (severe)
+  const PLAGUE_NATURAL_RECOVER = 0.005;   // per think chance
+  const PLAGUE_MAX_MS = 60000;            // forced recovery after this many sim ms
+  const PLAGUE_STRENGTH_MIN = 0.5;
+  const PLAGUE_STRENGTH_MAX = 2.0;
+
+  // Overcrowding reproduction penalty (v1.12) — per-species
+  const CROWD_PENALTY_MILD_THRESHOLD = 30;  // > this → ×0.4
+  const CROWD_PENALTY_HARD_THRESHOLD = 40;  // > this → ×0.3
+  const CROWD_PENALTY_MILD_MUL = 0.4;
+  const CROWD_PENALTY_HARD_MUL = 0.3;
+
+  // Mating season
+  const SEASON_INTERVAL_MIN = 90000;      // ms sim time between season starts
+  const SEASON_INTERVAL_MAX = 150000;
+  const SEASON_DURATION_MIN = 25000;
+  const SEASON_DURATION_MAX = 40000;
+
+  // Species traits (lifespans doubled vs v1.1)
+  const SPECIES = {
+    drift: {
+      key: 'drift', label: 'Drift', jp: '漂',
+      colorVar: '--species-1', statIdx: 1,
+      speed: 22, size: 5.5, lifespanMs: 440000,
+      wariness: 0.15, aggression: 0.0, fleeRadius: 30,
+      boidStrength: 0.25, wander: 0.6,
+      hpMax: 40, spawnCost: 2, packBrave: false,
+      aura: true, auraRadius: 45, auraHealRate: 0.6,   // v1.7: radius 60→45 (75%)
+      auraCalmFactor: 0.7, auraSelfBonus: 1.2,
+      auraFightCalmBase: 0.35,
+      reproFactor: 0.6,                    // Drift breeds slower — balances aura dominance (A)
+    },
+    dart: {
+      key: 'dart', label: 'Dart', jp: '疾',
+      colorVar: '--species-2', statIdx: 2,
+      speed: 85, size: 2.8, lifespanMs: 180000,
+      wariness: 0.9, aggression: 0.0, fleeRadius: 90,
+      boidStrength: 0.1, wander: 2.2,
+      hpMax: 20, spawnCost: 1, packBrave: false,
+      reproFactor: 1.6,                    // v1.5: lowered as compensation for flee-mating
+      fleeMating: true,                    // v1.5: can reproduce while fleeing (60% probability)
+    },
+    pack: {
+      key: 'pack', label: 'Pack', jp: '群',
+      colorVar: '--species-3', statIdx: 3,
+      speed: 45, size: 3.6, lifespanMs: 300000,
+      wariness: 0.55, aggression: 0.35, fleeRadius: 60,
+      boidStrength: 1.0, wander: 1.0,
+      hpMax: 30, spawnCost: 2, packBrave: true,
+      reproFactor: 1.6,
+      flockHealRadius: 50,                 // v1.5: heal within this radius if 2+ packmates
+      flockHealMul: 1.5,                   // v1.5: natural heal multiplier
+      assistRadius: 50,                    // v1.5: detect a fighting packmate within this
+      assistThreatRange: 110,              // v1.5: threat can be acquired up to this far
+      assistAggMul: 2.0,                   // v1.5: aggression multiplier for assist
+      intraAggMul: 0.1,                    // v1.7: half the default for intraspecies aggression
+    },
+    guard: {
+      key: 'guard', label: 'Guard', jp: '警',
+      colorVar: '--species-4', statIdx: 4,
+      speed: 32, size: 4.8, lifespanMs: 350000,
+      wariness: 0.8, aggression: 0.85, fleeRadius: 70,
+      boidStrength: 0.0, wander: 0.5,
+      hpMax: 55, spawnCost: 3, packBrave: false,
+      territorial: true, territoryRadius: 60,
+      territoryAggMul: 1.4,                // v1.5: was implicit 1.3, now 1.4
+      threatenMs: 1000,                    // v1.10: warn for 1s (was 2s) — less time to escape
+      reproFactor: 0.7,                    // Guard structural advantage dampened further (v1.4.1)
+      dmgMul: 1.7,                         // v1.10: Guard bites harder in combat
+      huntAccel: 160,                      // v1.10: chase acceleration (default 120) when fighting
+    },
+  };
+  const SPECIES_KEYS = Object.keys(SPECIES);
+
+  const ZONES = {
+    feeders: [
+      { x: 90,  y: 90,  r: 35, label: 'feeder-N' },
+      { x: 550, y: 310, r: 35, label: 'feeder-S' },
+    ],
+    play: { x: POND_W/2, y: POND_H/2, r: 110 },
+    rests: [
+      { x: 540, y: 70,  r: 40, label: 'rest-NE' },
+      { x: 90,  y: 330, r: 40, label: 'rest-SW' },
+    ],
+  };
+
+  const TOOLS = {
+    release: { label: 'release', cost: (sp) => SPECIES[sp].spawnCost, needsSpecies: true },
+    summon:  { label: 'summon',  cost: () => 1, needsSpecies: true },
+    food:    { label: 'food',    cost: () => 1 },
+    heal:    { label: 'heal',    cost: () => 3 },
+    peace:   { label: 'peace',   cost: () => 2 },
+  };
+
+  // ============================================================
+  // i18n
+  // ============================================================
+  const LANG_KEY = 'tsui-pond-lang';
+  let currentLang = 'ja';
+
+  const I18N = {
+    ja: {
+      'subtitle': '// 4種が泳ぐ静かな池 · v0.5.0',
+      'stat.drift': 'ドリフト', 'stat.dart': 'ダート', 'stat.pack': 'パック', 'stat.guard': 'ガード',
+      'stat.seed': 'シード', 'stat.season': '繁殖期',
+      'badge.season': '// 繁殖期',
+      'ctl.play': '▶ 再生', 'ctl.pause': '❚❚ 停止',
+      'ctl.speed': '速度', 'ctl.clear': 'クリア', 'ctl.seedPond': '池に放流',
+      'grp.species': '種族', 'grp.tool': '道具',
+      'sp.drift': 'ドリフト', 'sp.dart': 'ダート', 'sp.pack': 'パック', 'sp.guard': 'ガード',
+      'tip.drift': 'ゆっくり・平和・癒しのオーラ (自身も回復)',
+      'tip.dart':  '素早い・臆病・すべてから逃げる',
+      'tip.pack':  '群れを作る・仲間が多いと強気',
+      'tip.guard': '単独・縄張り持ち・攻撃的・しつこい',
+      'tool.release': '放流', 'tool.summon': '招集', 'tool.food': '餌',
+      'tool.heal': '癒し', 'tool.peace': '鎮静',
+      'tip.release': '選んだ種族を1匹放流する',
+      'tip.summon':  '選んだ種族をクリック地点に呼び寄せる',
+      'tip.food':    '見える餌を落とす (接触で満腹)',
+      'tip.heal':    '範囲内のHPを全回復し戦闘を解除',
+      'tip.peace':   '付近の戦闘を15秒間停止する',
+      'help': '// 池をクリックして現在の道具を使う · 個体にホバーで情報 · シードは10秒で1回復<br>// <kbd>1</kbd>–<kbd>4</kbd> 種族 · <kbd>q w e r t</kbd> 道具 · <kbd>space</kbd> 停止 · <kbd>shift+R</kbd> 再放流 · <kbd>c</kbd> クリア',
+      'tool.status.prefix': '',  // Japanese: "放流 ドリフト" — species label first? No — tool first still reads OK
+      'hover.age': '年齢', 'hover.hp': 'HP', 'hover.hunger': '空腹', 'hover.state': '',
+      'hover.sick': '罹患',
+      'hover.kills': '撃破',
+      'state.play': '遊泳', 'state.flee': '逃走', 'state.fight': '戦闘', 'state.fight.hunting': '追跡',
+      'state.hungry': '空腹', 'state.rest': '休息', 'state.dying': '瀕死',
+      'state.threaten': '威嚇',
+      // Log messages (use {0},{1},{2} placeholders)
+      'log.engage':   '<span class="s{0}">{1}#{2}</span> が <span class="s{3}">{4}#{5}</span> と交戦',
+      'log.calmed':   '<span class="s{0}">{1}#{2}</span> は長老 ドリフト に鎮まった',
+      'log.retreat':  '<span class="s{0}">{1}#{2}</span> は負傷して退いた',
+      'log.starveBreak':'<span class="s{0}">{1}#{2}</span> は空腹で戦闘を離脱',
+      'log.sank':     '<span class="s{0}">{1}#{2}</span> は静かに沈んだ',
+      'log.starved':  '<span class="s{0}">{1}#{2}</span> は餓死した',
+      'log.battleFall':'<span class="s{0}">{1}#{2}</span> は戦闘で斃れた',
+      'log.released': '<span class="s{0}">{1}#{2}</span> を放流',
+      'log.summoned': '<span class="s{0}">{1}匹の {2}</span> を招集',
+      'log.summonNone':'{0} は応答しなかった',
+      'log.foodDrop': '<span class="ev-food">餌を落とした</span>',
+      'log.healed':   '<span class="ev-heal">{0}体を癒した</span>',
+      'log.peaced':   '<span class="ev-peace">戦闘中の{0}体に平穏を与えた</span>',
+      'log.peacedNone':'<span class="ev-peace">平穏の波紋、戦闘なし</span>',
+      'log.noSeeds':  'シードが足りない',
+      'log.atCap':    '池が満員',
+      'log.pondCleared':'池を空にした',
+      'log.pondSeeded':'初期個体を放った',
+      'log.pondInit': '池を生成',
+      'log.pondResumed':'池を再開',
+      'log.seasonStart':'<span class="ev-season">繁殖期が始まった</span>',
+      'log.bornSuffix.season':' <span class="ev-season">(繁殖期)</span>',
+      'log.bornSuffix.rare':  ' <span class="ev-season">(希少種ブースト)</span>',
+      'log.born':     '新しい <span class="s{0}">{1}#{2}</span> が生まれた',
+      'log.plagueStart':  '<span class="ev-sick">疫病発生</span>：<span class="s{0}">{1}#{2}</span>',
+      'log.plagueInfect': '<span class="s{0}">{1}#{2}</span> が罹患',
+      'log.plagueRecover':'<span class="s{0}">{1}#{2}</span> は快復した',
+      'log.plagueDeath':  '<span class="s{0}">{1}#{2}</span> は病で斃れた',
+      'log.prey':         '<span class="s{0}">{1}#{2}</span> が <span class="s{3}">{4}#{5}</span> を仕留めた',
+      'log.repelled':     '<span class="s{0}">{1}#{2}</span> が <span class="s{3}">{4}#{5}</span> を追い払った',
+    },
+    en: {
+      'subtitle': '// four species in a quiet pond · v0.5.0',
+      'stat.drift': 'drift', 'stat.dart': 'dart', 'stat.pack': 'pack', 'stat.guard': 'guard',
+      'stat.seed': 'seed', 'stat.season': 'season',
+      'badge.season': '// mating season',
+      'ctl.play': '▶ play', 'ctl.pause': '❚❚ pause',
+      'ctl.speed': 'speed', 'ctl.clear': 'clear', 'ctl.seedPond': 'seed pond',
+      'grp.species': 'species', 'grp.tool': 'tool',
+      'sp.drift': 'drift', 'sp.dart': 'dart', 'sp.pack': 'pack', 'sp.guard': 'guard',
+      'tip.drift': 'slow · peaceful · healing aura (heals self too)',
+      'tip.dart':  'fast · skittish · flees everyone',
+      'tip.pack':  'flocks strongly · brave in group',
+      'tip.guard': 'solitary · territorial · aggressive · stubborn',
+      'tool.release': 'release', 'tool.summon': 'summon', 'tool.food': 'food',
+      'tool.heal': 'heal', 'tool.peace': 'peace',
+      'tip.release': 'release a new individual',
+      'tip.summon':  'call selected species to click point',
+      'tip.food':    'drop a visible food crumb (full satiation on contact)',
+      'tip.heal':    'area heal HP and end fights',
+      'tip.peace':   'stop nearby fights for 15s',
+      'help': '// click pond to apply current tool · hover over individual for info · seeds refill 1/10s<br>// <kbd>1</kbd>–<kbd>4</kbd> species · <kbd>q w e r t</kbd> tools · <kbd>space</kbd> pause · <kbd>shift+R</kbd> reseed · <kbd>c</kbd> clear',
+      'tool.status.prefix': '',
+      'hover.age': 'age', 'hover.hp': 'HP', 'hover.hunger': 'hunger', 'hover.state': '',
+      'hover.sick': 'sick',
+      'hover.kills': 'kills',
+      'state.play': 'play', 'state.flee': 'flee', 'state.fight': 'fight',
+      'state.hungry': 'hungry', 'state.rest': 'rest', 'state.dying': 'dying',
+      'state.threaten': 'threaten',
+      'log.engage':   '<span class="s{0}">{1}#{2}</span> engaged <span class="s{3}">{4}#{5}</span>',
+      'log.calmed':   '<span class="s{0}">{1}#{2}</span> calmed by elder Drift',
+      'log.retreat':  '<span class="s{0}">{1}#{2}</span> retreated wounded',
+      'log.starveBreak':'<span class="s{0}">{1}#{2}</span> broke off, starving',
+      'log.sank':     '<span class="s{0}">{1}#{2}</span> sank peacefully',
+      'log.starved':  '<span class="s{0}">{1}#{2}</span> starved',
+      'log.battleFall':'<span class="s{0}">{1}#{2}</span> fell in battle',
+      'log.released': '<span class="s{0}">{1}#{2}</span> released',
+      'log.summoned': '<span class="s{0}">{1} {2}</span> summoned',
+      'log.summonNone':'no {0} responded',
+      'log.foodDrop': '<span class="ev-food">food crumb dropped</span>',
+      'log.healed':   '<span class="ev-heal">healed {0}</span>',
+      'log.peaced':   '<span class="ev-peace">peace bestowed on {0} fighting</span>',
+      'log.peacedNone':'<span class="ev-peace">peace radiated, no fights</span>',
+      'log.noSeeds':  'not enough seeds',
+      'log.atCap':    'pond at capacity',
+      'log.pondCleared':'pond cleared',
+      'log.pondSeeded':'starter pond seeded',
+      'log.pondInit': 'pond initialized',
+      'log.pondResumed':'pond resumed',
+      'log.seasonStart':'<span class="ev-season">mating season begins</span>',
+      'log.bornSuffix.season':' <span class="ev-season">(season)</span>',
+      'log.bornSuffix.rare':  ' <span class="ev-season">(rare boost)</span>',
+      'log.born':     'new <span class="s{0}">{1}#{2}</span> born',
+      'log.plagueStart':  '<span class="ev-sick">plague outbreak</span>: <span class="s{0}">{1}#{2}</span>',
+      'log.plagueInfect': '<span class="s{0}">{1}#{2}</span> fell ill',
+      'log.plagueRecover':'<span class="s{0}">{1}#{2}</span> recovered',
+      'log.plagueDeath':  '<span class="s{0}">{1}#{2}</span> succumbed to plague',
+      'log.prey':         '<span class="s{0}">{1}#{2}</span> took down <span class="s{3}">{4}#{5}</span>',
+      'log.repelled':     '<span class="s{0}">{1}#{2}</span> drove off <span class="s{3}">{4}#{5}</span>',
+    }
+  };
+
+  function t(key, ...args) {
+    const dict = I18N[currentLang] || I18N.ja;
+    let s = dict[key];
+    if (s === undefined) s = I18N.ja[key] || key;
+    for (let i = 0; i < args.length; i++) {
+      s = s.split('{' + i + '}').join(String(args[i]));
+    }
+    return s;
+  }
+
+  // Safe localized species label for current language
+  function spLabel(speciesKey) {
+    return t('sp.' + speciesKey);
+  }
+  function spStatIdx(speciesKey) {
+    return SPECIES[speciesKey].statIdx;
+  }
+  function stateLabel(state) {
+    return t('state.' + state) || state;
+  }
+
+  // ============================================================
+  // State
+  // ============================================================
+  const agents = [];
+  let foodCrumbs = [];
+  let effects = [];
+  let nextId = 1;
+  let seeds = SEED_MAX;
+  let running = true;
+  let selectedSpecies = 'drift';
+  let activeTool = 'release';
+  let simSpeed = 0.4;
+  let simTime = 0;                  // accumulated sim ms
+  let lastLoopT = 0;
+  let lastThink = 0;
+  let lastSeedRegen = 0;
+  let lastReproCheck = 0;
+
+  // Mating season
+  let seasonNextCheck = 60000 + Math.random() * 30000;  // first season check window
+  let seasonUntil = 0;              // simTime threshold
+
+  // Plague (v1.7)
+  let plagueCheckTimer = 0;         // sim-ms accumulator for outbreak check
+  let plagueStrength = 1.0;         // multiplier on infection probability, set per outbreak
+  let plagueActive = false;         // true when at least one infected individual exists
+
+  // ============================================================
+  // DOM
+  // ============================================================
+  const $ = (id) => document.getElementById(id);
+  const canvas = $('pond');
+  const ctx = canvas.getContext('2d');
+  canvas.width = POND_W; canvas.height = POND_H;
+
+  const statEls = { 1: $('stat-1'), 2: $('stat-2'), 3: $('stat-3'), 4: $('stat-4') };
+  const elSeed = $('stat-seed');
+  const elSeasonStat = $('stat-season');
+  const elSeasonBox = $('stat-season-box');
+  const elSeasonBadge = $('season-badge');
+  const btnPlay = $('btn-play');
+  const elSpeed = $('speed');
+  const elSpeedVal = $('speed-val');
+  const btnClear = $('btn-clear');
+  const btnSeed = $('btn-seed');
+  const elLog = $('log');
+  const elHoverInfo = $('hover-info');
+  const elToolStatus = $('tool-status');
+  const speciesBtns = { drift: $('sp-1'), dart: $('sp-2'), pack: $('sp-3'), guard: $('sp-4') };
+  const toolBtns = {
+    release: $('tool-release'), summon: $('tool-summon'),
+    food: $('tool-food'), heal: $('tool-heal'), peace: $('tool-peace'),
+  };
+  const elSubtitle = $('subtitle');
+  const elHelpText = $('help-text');
+  const langBtns = document.querySelectorAll('.lang-switch button');
+
+  // ============================================================
+  // Apply current language to all DOM strings
+  // ============================================================
+  function applyLang() {
+    // Walk all [data-i18n] elements — replace innerText/innerHTML based on key
+    document.querySelectorAll('[data-i18n]').forEach(el => {
+      const key = el.getAttribute('data-i18n');
+      // For elements containing child nodes we only want to replace text,
+      // but buttons here are text-only, and help uses innerHTML template with <kbd>.
+      // We trust I18N values: they're hard-coded in this file, never user input.
+      el.innerHTML = t(key);
+    });
+    document.querySelectorAll('[data-i18n-title]').forEach(el => {
+      const key = el.getAttribute('data-i18n-title');
+      el.setAttribute('title', t(key));
+    });
+    // Subtitle (version string is inside the translation)
+    if (elSubtitle) elSubtitle.textContent = t('subtitle');
+    // Help text with <kbd> tags — allowed because I18N strings are trusted
+    if (elHelpText) elHelpText.innerHTML = t('help');
+    // Refresh lang-switch active state
+    langBtns.forEach(b => b.classList.toggle('active', b.dataset.lang === currentLang));
+    // Re-render downstream widgets that depend on language
+    updatePlayButton();
+    updateToolStatus();
+    // html lang attribute for a11y / font rendering hints
+    document.documentElement.setAttribute('lang', currentLang);
+  }
+
+  function setLang(lang) {
+    if (lang !== 'ja' && lang !== 'en') return;
+    currentLang = lang;
+    try { localStorage.setItem(LANG_KEY, lang); } catch(_) {}
+    applyLang();
+  }
+
+  // ============================================================
+  // Theme colors
+  // ============================================================
+  const colorCache = {};
+  function refreshThemeColors() {
+    const cs = getComputedStyle(document.documentElement);
+    for (const k of SPECIES_KEYS) {
+      colorCache[k] = cs.getPropertyValue(SPECIES[k].colorVar).trim() || '#ffffff';
+    }
+    colorCache._danger = cs.getPropertyValue('--danger').trim() || '#ff6b6b';
+    colorCache._heal   = cs.getPropertyValue('--tool-heal').trim() || '#7dd3c0';
+    colorCache._peace  = cs.getPropertyValue('--tool-peace').trim() || '#9d8ae8';
+    colorCache._food   = cs.getPropertyValue('--food-color').trim() || '#e8b842';
+    colorCache._season = cs.getPropertyValue('--season-color').trim() || '#ff8eb3';
+  }
+  document.querySelectorAll('.theme-switch button').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const t = btn.dataset.theme;
+      if (t === 'calm') document.documentElement.removeAttribute('data-theme');
+      else document.documentElement.dataset.theme = t;
+      document.querySelectorAll('.theme-switch button')
+        .forEach(b => b.classList.toggle('active', b === btn));
+      refreshThemeColors();
+    });
+  });
+  refreshThemeColors();
+
+  // Language switch handlers
+  langBtns.forEach(btn => {
+    btn.addEventListener('click', () => setLang(btn.dataset.lang));
+  });
+
+  // About modal
+  (function(){
+    const backdrop = document.getElementById('modal-backdrop');
+    const openBtn  = document.getElementById('btn-about');
+    const closeBtn = document.getElementById('modal-close');
+    if (!backdrop || !openBtn || !closeBtn) return;
+    openBtn.addEventListener('click', () => backdrop.classList.add('open'));
+    closeBtn.addEventListener('click', () => backdrop.classList.remove('open'));
+    backdrop.addEventListener('click', (e) => {
+      if (e.target === backdrop) backdrop.classList.remove('open');
+    });
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape' && backdrop.classList.contains('open')) {
+        backdrop.classList.remove('open');
+      }
+    });
+  })();
+
+  // ============================================================
+  // Agents
+  // ============================================================
+  function makeAgent(species, x, y) {
+    const t = SPECIES[species];
+    const j = () => 0.85 + Math.random() * 0.3;
+    return {
+      id: nextId++,
+      species, x, y,
+      vx: (Math.random() - 0.5) * 10, vy: (Math.random() - 0.5) * 10,
+      ageMs: 0, lifespanMs: t.lifespanMs * j(),
+      hp: t.hpMax * 0.7,
+      hunger: Math.random() * 20,
+      state: 'play', target: null,
+      fightCooldownMs: 0, fightingWith: 0,
+      threatenMs: 0,                       // v1.5: threat display timer
+      threatenTarget: 0,                   // v1.5: id of agent being threatened
+      intraAttacker: 0,                    // v1.5: id of same-species attacker
+      sick: false,                         // v1.7: plague infection flag
+      sickAgeMs: 0,                        // v1.7: ms since infection (for recovery / death)
+      sickDrainPerMs: 0,                   // v1.12: individual plague severity (set on infection)
+      kills: 0,                            // v1.7: lifetime kill count (experience)
+      intraCdMs: 0,                        // v1.7: cooldown before next intra-species check
+      threatenRewardCdMs: 0,               // v1.7: cooldown before next threaten repel reward
+      // v1.16: per-individual combat temperament
+      adrenRate: 0.00012 + Math.random() * 0.00016, // 0.00012-0.00028, higher = more aggressive in long fights
+      fightAdrenaline: 0,                  // v1.16: accumulated adrenaline during current fight
+      trail: [],
+      speedMul: j(), sizeMul: j(), warinessMul: j(),
+      hungerMul: 0.6 + Math.random() * 0.8,
+      roamMul: j(),
+      curiosityNext: Math.random() * 8000,
+      home: t.territorial ? { x, y } : null,
+      dyingMs: 0, marked: false,
+      _trailAcc: 0,
+    };
+  }
+
+  function spawnAgent(species, x, y, free) {
+    if (agents.length >= POP_CAP) {
+      logI18n('log.atCap');
+      return null;
+    }
+    const cost = SPECIES[species].spawnCost;
+    if (!free && seeds < cost) { logI18n('log.noSeeds'); return null; }
+    if (!free) seeds -= cost;
+    const ag = makeAgent(species, x, y);
+    agents.push(ag);
+    return ag;
+  }
+
+  // Age-scaled HP max — 3-stage growth across full lifespan
+  // youth(0-40%): 0.7→1.0 / prime(40-85%): 1.0→1.15 / elder(85-100%): 1.15→1.30
+  function hpMaxOf(a) {
+    const t = SPECIES[a.species];
+    const lf = Math.min(1, a.ageMs / a.lifespanMs);
+    let mult;
+    if (lf < 0.4) {
+      mult = 0.7 + 0.3 * (lf / 0.4);
+    } else if (lf < 0.85) {
+      mult = 1.0 + 0.15 * ((lf - 0.4) / 0.45);
+    } else {
+      mult = 1.15 + 0.15 * ((lf - 0.85) / 0.15);
+    }
+    return t.hpMax * mult;
+  }
+
+  // ============================================================
+  // Utilities
+  // ============================================================
+  function dist2(ax, ay, bx, by) { const dx = ax-bx, dy = ay-by; return dx*dx + dy*dy; }
+  function nearest(arr, a) {
+    let best = null, bd = Infinity;
+    for (const z of arr) {
+      const d = dist2(z.x, z.y, a.x, a.y);
+      if (d < bd) { bd = d; best = z; }
+    }
+    return best;
+  }
+  function randPointInCircle(cx, cy, r) {
+    const ang = Math.random() * Math.PI * 2;
+    const rad = Math.sqrt(Math.random()) * r;
+    return { x: cx + Math.cos(ang) * rad, y: cy + Math.sin(ang) * rad };
+  }
+  function randPointInPond() {
+    return { x: 30 + Math.random() * (POND_W - 60), y: 30 + Math.random() * (POND_H - 60) };
+  }
+  function isMatingSeason() { return simTime < seasonUntil; }
+
+  // Drift aura sources cache — split by tier
+  let driftAuraBasic = [];   // age >= 8s — heal + passive aggression dampening
+  let driftAuraElders = [];  // age >= 30s — can break ongoing fights
+
+  // Dominant species cache (v1.5) — a species is "dominant" when it's the max
+  // AND its share of living agents strictly exceeds INTRA_DOMINANCE_RATIO.
+  // Only Guard and Pack can act on intraspecies aggression (case b from discussion).
+  const INTRA_ELIGIBLE = { guard: true, pack: true };
+  const dominantFlags = { drift: false, dart: false, pack: false, guard: false };
+
+  function refreshAuraSources() {
+    driftAuraBasic.length = 0;
+    driftAuraElders.length = 0;
+    speciesCounts.drift = 0;
+    speciesCounts.dart = 0;
+    speciesCounts.pack = 0;
+    speciesCounts.guard = 0;
+    let total = 0;
+    let infected = 0;
+    for (const a of agents) {
+      if (a.state === 'dying') continue;
+      speciesCounts[a.species]++;
+      total++;
+      if (a.sick) infected++;
+      if (a.species === 'drift' && !a.sick) {
+        if (a.ageMs > DRIFT_AURA_BASIC_AGE) driftAuraBasic.push(a);
+        if (a.ageMs > DRIFT_AURA_ELDER_AGE) driftAuraElders.push(a);
+      }
+    }
+    // Find dominant species
+    const threshold = total * INTRA_DOMINANCE_RATIO;
+    for (const k in dominantFlags) {
+      dominantFlags[k] = INTRA_ELIGIBLE[k] && speciesCounts[k] > threshold;
+    }
+    livingTotal = total;
+    infectedCount = infected;
+  }
+  const speciesCounts = { drift: 0, dart: 0, pack: 0, guard: 0 };
+  let livingTotal = 0;
+  let infectedCount = 0;
+  function nearAnyDriftBasic(a) {
+    const r2 = SPECIES.drift.auraRadius * SPECIES.drift.auraRadius;
+    for (const d of driftAuraBasic) {
+      if (d === a) continue;
+      if (dist2(a.x, a.y, d.x, d.y) < r2) return true;
+    }
+    return false;
+  }
+  function nearAnyDriftElder(a) {
+    const r2 = SPECIES.drift.auraRadius * SPECIES.drift.auraRadius;
+    for (const d of driftAuraElders) {
+      if (d === a) continue;
+      if (dist2(a.x, a.y, d.x, d.y) < r2) return true;
+    }
+    return false;
+  }
+
+  // ============================================================
+  // Mating season
+  // ============================================================
+  function tickSeason(dtSim) {
+    seasonNextCheck -= dtSim;
+    if (seasonNextCheck > 0) return;
+    seasonNextCheck = SEASON_INTERVAL_MIN + Math.random() * (SEASON_INTERVAL_MAX - SEASON_INTERVAL_MIN);
+    if (!isMatingSeason()) {
+      const dur = SEASON_DURATION_MIN + Math.random() * (SEASON_DURATION_MAX - SEASON_DURATION_MIN);
+      seasonUntil = simTime + dur;
+      logI18n('log.seasonStart');
+    }
+  }
+
+  // ============================================================
+  // Plague (v1.7) — contagion within a species, crowded-pond only
+  // ============================================================
+  function tickPlague(dtSim) {
+    plagueCheckTimer += dtSim;
+    if (plagueCheckTimer >= PLAGUE_CHECK_MS) {
+      plagueCheckTimer = 0;
+      // v1.10: per-species thresholds. Each eligible species rolls independently,
+      // weighted so a more crowded species is more likely to have an outbreak.
+      // Eligible = strictly more than PLAGUE_SPECIES_THRESHOLD living members.
+      const eligible = [];
+      let weightSum = 0;
+      for (const k of SPECIES_KEYS) {
+        if (speciesCounts[k] > PLAGUE_SPECIES_THRESHOLD) {
+          // Species weight = count. Doubling at > 30 is applied per species below.
+          eligible.push({ species: k, count: speciesCounts[k] });
+          weightSum += speciesCounts[k];
+        }
+      }
+      if (eligible.length > 0) {
+        // Weighted pick — more populous species more likely chosen
+        let pick = Math.random() * weightSum;
+        let chosen = eligible[0];
+        for (const e of eligible) {
+          pick -= e.count;
+          if (pick <= 0) { chosen = e; break; }
+        }
+        // Outbreak roll for this species — doubled if crowded further
+        const prob = (chosen.count > PLAGUE_SPECIES_DOUBLE)
+          ? PLAGUE_OUTBREAK_PROB * 2
+          : PLAGUE_OUTBREAK_PROB;
+        if (Math.random() < prob) {
+          // Index case: a random non-sick member of the chosen species
+          const candidates = agents.filter(x =>
+            x.state !== 'dying' && !x.sick && x.species === chosen.species);
+          if (candidates.length > 0) {
+            const victim = candidates[Math.floor(Math.random() * candidates.length)];
+            victim.sick = true;
+            victim.sickAgeMs = 0;
+            victim.sickDrainPerMs = PLAGUE_HP_DRAIN_MIN +
+              Math.random() * (PLAGUE_HP_DRAIN_MAX - PLAGUE_HP_DRAIN_MIN);
+            plagueStrength = PLAGUE_STRENGTH_MIN +
+              Math.random() * (PLAGUE_STRENGTH_MAX - PLAGUE_STRENGTH_MIN);
+            plagueActive = true;
+            logI18n('log.plagueStart',
+              SPECIES[victim.species].statIdx, spLabel(victim.species), victim.id);
+          }
+        }
+      }
+    }
+    // Active state flag (used to skip scanning when no infections)
+    plagueActive = infectedCount > 0;
+  }
+
+  // Per-think: infection spread + recovery + aging
+  // Called once per agent per think interval. Only runs if the agent is sick
+  // OR there is at least one sick packmate nearby (lazy scan).
+  function thinkPlague(a) {
+    const tdt = THINK_INTERVAL_MS;
+    if (a.sick) {
+      a.sickAgeMs += tdt;
+      // Forced recovery after max duration
+      if (a.sickAgeMs >= PLAGUE_MAX_MS) {
+        a.sick = false;
+        a.sickAgeMs = 0;
+        logI18n('log.plagueRecover',
+          SPECIES[a.species].statIdx, spLabel(a.species), a.id);
+        return;
+      }
+      // Natural recovery chance per think
+      if (Math.random() < PLAGUE_NATURAL_RECOVER) {
+        a.sick = false;
+        a.sickAgeMs = 0;
+        logI18n('log.plagueRecover',
+          SPECIES[a.species].statIdx, spLabel(a.species), a.id);
+        return;
+      }
+      // Try to infect same-species neighbors within radius
+      const r2 = PLAGUE_INFECT_RADIUS * PLAGUE_INFECT_RADIUS;
+      const prob = PLAGUE_INFECT_PROB_BASE * plagueStrength;
+      for (const b of agents) {
+        if (b === a || b.sick || b.state === 'dying') continue;
+        if (b.species !== a.species) continue;
+        if (dist2(a.x, a.y, b.x, b.y) < r2 && Math.random() < prob) {
+          b.sick = true;
+          b.sickAgeMs = 0;
+          b.sickDrainPerMs = PLAGUE_HP_DRAIN_MIN +
+            Math.random() * (PLAGUE_HP_DRAIN_MAX - PLAGUE_HP_DRAIN_MIN);
+          logI18n('log.plagueInfect',
+            SPECIES[b.species].statIdx, spLabel(b.species), b.id);
+        }
+      }
+    }
+  }
+
+  // ============================================================
+  // Think (state evaluation)
+  // ============================================================
+  function think(a) {
+    if (a.state === 'dying') return;
+    const t = SPECIES[a.species];
+
+    a.curiosityNext -= THINK_INTERVAL_MS;
+
+    // Scan
+    // - threat: nearest hostile (other species within fleeRadius)
+    // - intraRival: same-species fighting within fleeRadius (if we are eligible & dominant)
+    // - packmateInFight / packmateOpponent: any same-species in fight nearby (for Pack assist)
+    let threat = null, threatD2 = Infinity;
+    let intraRival = null, intraRivalD2 = Infinity;
+    let packCount = 0;
+    let packmateInFight = null, packmateInFightD2 = Infinity;
+    let packmateOpponent = null;
+    const fleeR2 = t.fleeRadius * t.fleeRadius * a.warinessMul;
+    const assistR = t.assistRadius || 0;
+    const assistR2 = assistR * assistR;
+    for (const b of agents) {
+      if (b === a || b.state === 'dying') continue;
+      const d2 = dist2(a.x, a.y, b.x, b.y);
+      if (b.species !== a.species) {
+        if (d2 < fleeR2 && d2 < threatD2) { threatD2 = d2; threat = b; }
+      } else {
+        if (d2 < 2500) packCount++;
+        // Pack assist detection: is a packmate fighting nearby?
+        if (assistR > 0 && d2 < assistR2 && b.state === 'fight' && b.fightingWith) {
+          if (d2 < packmateInFightD2) {
+            packmateInFightD2 = d2;
+            packmateInFight = b;
+          }
+        }
+        // Intraspecies rival detection: only if we're dominant & eligible species
+        if (dominantFlags[a.species] && d2 < fleeR2 && d2 < intraRivalD2) {
+          intraRivalD2 = d2; intraRival = b;
+        }
+      }
+    }
+    const threatDist = Math.sqrt(threatD2);
+
+    // Pack assist: if a packmate is fighting nearby, treat their opponent as a threat
+    // even if it would normally be outside fleeRadius (up to assistThreatRange).
+    if (packmateInFight && packmateInFight.fightingWith) {
+      const opp = agents.find(x => x.id === packmateInFight.fightingWith &&
+                                    x.state !== 'dying');
+      if (opp && opp.species !== a.species) {
+        const oppD2 = dist2(a.x, a.y, opp.x, opp.y);
+        const assistRange = t.assistThreatRange || t.fleeRadius;
+        if (oppD2 < assistRange * assistRange && oppD2 < threatD2) {
+          threat = opp;
+          threatD2 = oppD2;
+          packmateOpponent = opp;
+        }
+      }
+    }
+
+    // 1. Fight state — multiple break paths
+    if (a.state === 'fight') {
+      // v1.16: accumulate adrenaline during sustained fights
+      a.fightAdrenaline += THINK_INTERVAL_MS * a.adrenRate;
+      // Effective aggression during fight = base + adrenaline (cannot be calmed easily)
+      const effAggFight = t.aggression + a.fightAdrenaline;
+
+      // 1a. Drift ELDER aura calming check (only mature drifts can break fights)
+      if (nearAnyDriftElder(a)) {
+        const calmChance = Math.max(0, (1 - effAggFight * 0.85) * SPECIES.drift.auraFightCalmBase);
+        if (calmChance > 0 && Math.random() < calmChance) {
+          a.state = 'play';
+          a.fightCooldownMs = 8000;
+          a.fightingWith = 0;
+          a.fightAdrenaline = 0;
+          logI18n('log.calmed', t.statIdx, spLabel(a.species), a.id);
+          return;
+        }
+      }
+
+      // 1b. Wounded retreat — aggression (+ adrenaline) resists
+      const lowHp = a.hp / hpMaxOf(a) < FLEE_HP_FRACTION;
+      if (lowHp) {
+        const breakChance = Math.max(0, (1 - effAggFight) * FIGHT_BREAK_HP_BASE);
+        if (breakChance > 0 && Math.random() < breakChance) {
+          a.state = 'flee';
+          a.target = null;
+          a.fightCooldownMs = 5000;
+          a.fightingWith = 0;
+          a.fightAdrenaline = 0;
+          logI18n('log.retreat', t.statIdx, spLabel(a.species), a.id);
+          return;
+        }
+      }
+
+      // 1c. Starvation override — even Guards can break
+      if (a.hunger > HUNGER_FIGHT_BREAK) {
+        const breakChance = (1 - t.aggression * 0.5) * FIGHT_BREAK_HUNGER_BASE;
+        if (Math.random() < breakChance) {
+          a.state = 'hungry';
+          a.fightCooldownMs = 5000;
+          a.fightingWith = 0;
+          a.fightAdrenaline = 0;
+          const f = nearest(ZONES.feeders, a);
+          a.target = { x: f.x, y: f.y };
+          logI18n('log.starveBreak', t.statIdx, spLabel(a.species), a.id);
+          return;
+        }
+      }
+
+      // 1d. Standard end conditions — resolve via fightingWith ID (supports intra-species)
+      const current = (a.fightingWith)
+        ? agents.find(x => x.id === a.fightingWith && x.state !== 'dying')
+        : null;
+      if (!current) {
+        a.state = 'play';
+        a.fightCooldownMs = 5000;
+        a.fightingWith = 0;
+        a.fightAdrenaline = 0;
+      } else {
+        const cd2 = dist2(a.x, a.y, current.x, current.y);
+        if (cd2 > t.fleeRadius * t.fleeRadius * 1.44 || a.hp <= 0) {
+          a.state = 'play';
+          a.fightCooldownMs = 5000;
+          a.fightingWith = 0;
+          a.fightAdrenaline = 0;
+        } else {
+          return; // keep fighting the current target
+        }
+      }
+    }
+
+    // 1.5 Retaliation: if marked as attacked by a same-species intruder, engage them back
+    if (a.intraAttacker && a.fightCooldownMs <= 0 && a.state !== 'fight') {
+      const attacker = agents.find(x => x.id === a.intraAttacker && x.state !== 'dying');
+      if (attacker) {
+        a.state = 'fight';
+        a.fightingWith = attacker.id;
+        logI18n('log.engage',
+          t.statIdx, spLabel(a.species), a.id,
+          SPECIES[attacker.species].statIdx, spLabel(attacker.species), attacker.id);
+        a.intraAttacker = 0;
+        return;
+      } else {
+        a.intraAttacker = 0;
+      }
+    }
+
+    // 1.6 Threatening state (v1.5 Guard): finish the warning or transition
+    if (a.state === 'threaten') {
+      a.threatenMs -= THINK_INTERVAL_MS;
+      const target = (a.threatenTarget)
+        ? agents.find(x => x.id === a.threatenTarget && x.state !== 'dying')
+        : null;
+      // If target fled out of range or is gone — stand down (v1.7: repel reward)
+      if (!target || dist2(a.x, a.y, target.x, target.y) > t.fleeRadius * t.fleeRadius * 1.44) {
+        // Repel reward — only when target still exists (fled successfully, not died mid-warning)
+        // and reward cooldown expired. Prevents stacking from chained threats.
+        if (target && a.threatenRewardCdMs <= 0) {
+          a.hp = Math.min(hpMaxOf(a), a.hp + THREATEN_REPEL_HP);
+          a.hunger = Math.max(0, a.hunger - THREATEN_REPEL_HUNGER);
+          a.threatenRewardCdMs = THREATEN_REWARD_CD_MS;
+          logI18n('log.repelled',
+            t.statIdx, spLabel(a.species), a.id,
+            SPECIES[target.species].statIdx, spLabel(target.species), target.id);
+        }
+        a.state = 'play';
+        a.threatenMs = 0;
+        a.threatenTarget = 0;
+        return;
+      }
+      // If timer expired — commit to fight (target did not flee enough)
+      if (a.threatenMs <= 0) {
+        a.state = 'fight';
+        a.fightingWith = target.id;
+        a.threatenTarget = 0;
+        logI18n('log.engage',
+          t.statIdx, spLabel(a.species), a.id,
+          SPECIES[target.species].statIdx, spLabel(target.species), target.id);
+        return;
+      }
+      // Otherwise keep warning
+      return;
+    }
+
+    // 2. Threat encountered (not currently fighting)
+    if (threat && a.fightCooldownMs <= 0) {
+      let effAgg = t.aggression * a.warinessMul;
+      if (t.packBrave) effAgg *= (packCount >= 2 ? 1.6 : 0.15);
+      if (t.territorial && a.home) {
+        const homeD2 = dist2(a.x, a.y, a.home.x, a.home.y);
+        if (homeD2 < t.territoryRadius * t.territoryRadius) {
+          effAgg *= (t.territoryAggMul || 1.3);
+        }
+      }
+      // Pack assist boost — if engaging via packmate's opponent
+      if (packmateOpponent && packmateOpponent === threat) {
+        effAgg *= (t.assistAggMul || 2.0);
+      }
+      if (nearAnyDriftBasic(a)) effAgg *= SPECIES.drift.auraCalmFactor;
+
+      // v1.10: hungry Guards/Packs become more eager to fight (hunting instinct).
+      // Range 40-75: below is well-fed, above overlaps with FIGHT_BREAK / starving.
+      // Dart/Drift have aggression=0 so this has no practical effect on them.
+      if ((a.species === 'guard' || a.species === 'pack') &&
+          a.hunger > 40 && a.hunger < 75) {
+        effAgg *= 1.3;
+      }
+
+      // Wounded or starving agents won't pick fights even if aggressive
+      const lowHp = a.hp / hpMaxOf(a) < FLEE_HP_FRACTION;
+      const starving = a.hunger > HUNGER_FIGHT_BREAK;
+      const hungryPrio = a.hunger > HUNGER_FOOD_PRIORITY;
+      if (lowHp || starving) effAgg *= 0.2;
+      // v1.16: continuous HP-based aggression decay (applies even above lowHp threshold)
+      // hpFrac 1.0 → ×1.0, 0.5 → ×0.625, 0.25 → ×0.4375, 0.0 → ×0.25
+      const hpFracAgg = Math.max(0, Math.min(1, a.hp / hpMaxOf(a)));
+      effAgg *= (0.25 + hpFracAgg * 0.75);
+
+      // v1.15: rare-species survival priority — strongly suppress fight initiation
+      // when own species is endangered (count<4). Flee reaction below is unchanged.
+      if (speciesCounts[a.species] < 4) effAgg *= 0.1;
+
+      if (Math.random() < effAgg && threatDist < t.fleeRadius * 0.85) {
+        // Guard with threatenMs > 0 enters threaten state first
+        if (t.threatenMs && t.threatenMs > 0) {
+          a.state = 'threaten';
+          a.threatenMs = t.threatenMs;
+          a.threatenTarget = threat.id;
+          return;
+        }
+        a.state = 'fight';
+        a.fightingWith = threat.id;
+        logI18n('log.engage',
+          t.statIdx, spLabel(a.species), a.id,
+          SPECIES[threat.species].statIdx, spLabel(threat.species), threat.id);
+        return;
+      } else if (starving) {
+        // Starving override — fall through to hunger check below, ignore threat
+      } else if (hungryPrio) {
+        // Partial E: skip flee only if feeder is closer than threat
+        const feeder = nearest(ZONES.feeders, a);
+        const feederD2 = dist2(a.x, a.y, feeder.x, feeder.y);
+        if (feederD2 < threatD2) {
+          // feeder closer — fall through to hunger check (no return)
+        } else if (t.wariness * a.warinessMul > 0.3) {
+          a.state = 'flee';
+          a.target = null;
+          return;
+        }
+      } else if (t.wariness * a.warinessMul > 0.3) {
+        a.state = 'flee';
+        a.target = null;
+        return;
+      }
+    }
+
+    // 2.5 Intraspecies fight (v1.5) — only when own species dominates & we're eligible
+    // v1.7: per-agent cooldown (intraCdMs) prevents every-think firing
+    // v1.7: species can override INTRA_AGG_MUL (Pack lowered to 0.1)
+    if (intraRival && a.fightCooldownMs <= 0 && a.intraCdMs <= 0 && a.state !== 'fight') {
+      const intraMul = (typeof t.intraAggMul === 'number') ? t.intraAggMul : INTRA_AGG_MUL;
+      let effAgg = t.aggression * intraMul * a.warinessMul;
+      if (nearAnyDriftBasic(a)) effAgg *= SPECIES.drift.auraCalmFactor;
+      const lowHp = a.hp / hpMaxOf(a) < FLEE_HP_FRACTION;
+      const starving = a.hunger > HUNGER_FIGHT_BREAK;
+      if (lowHp || starving) effAgg *= 0.2;
+      // v1.16: continuous HP-based decay (matches inter-species)
+      const hpFracAgg = Math.max(0, Math.min(1, a.hp / hpMaxOf(a)));
+      effAgg *= (0.25 + hpFracAgg * 0.75);
+      // v1.15: rare-species survival priority (unlikely to reach here since
+      // intraspecies requires dominant status, but consistent with inter-species)
+      if (speciesCounts[a.species] < 4) effAgg *= 0.1;
+      const intraDist = Math.sqrt(intraRivalD2);
+      a.intraCdMs = INTRA_CHECK_COOLDOWN_MS;  // throttle next check regardless of outcome
+      if (Math.random() < effAgg && intraDist < t.fleeRadius * 0.85) {
+        a.state = 'fight';
+        a.fightingWith = intraRival.id;
+        intraRival.intraAttacker = a.id;
+        logI18n('log.engage',
+          t.statIdx, spLabel(a.species), a.id,
+          t.statIdx, spLabel(a.species), intraRival.id);
+        return;
+      }
+    }
+
+    // 3. Hungry — prefer food crumbs over feeders
+    if (a.hunger > HUNGER_HUNGRY_THRESHOLD) {
+      a.state = 'hungry';
+      let bestFood = null, bestFD = Infinity;
+      for (const f of foodCrumbs) {
+        const d = dist2(a.x, a.y, f.x, f.y);
+        if (d < bestFD) { bestFD = d; bestFood = f; }
+      }
+      const feeder = nearest(ZONES.feeders, a);
+      const feederD = dist2(a.x, a.y, feeder.x, feeder.y);
+      if (bestFood && bestFD < feederD * 0.7) {
+        a.target = { x: bestFood.x, y: bestFood.y };
+      } else {
+        a.target = { x: feeder.x, y: feeder.y };
+      }
+      return;
+    }
+
+    // 4. Lower HP -> rest (earlier in v1.3)
+    if (a.hp < hpMaxOf(a) * REST_HP_FRACTION) {
+      a.state = 'rest';
+      const r = nearest(ZONES.rests, a);
+      a.target = { x: r.x, y: r.y };
+      return;
+    }
+
+    // 5. Play (default) — with roam variety
+    a.state = 'play';
+    const reachedTarget = !a.target || dist2(a.x, a.y, a.target.x, a.target.y) < 100;
+    const sponChange = a.curiosityNext <= 0;
+    if (reachedTarget || sponChange) {
+      a.curiosityNext = 4000 + Math.random() * 12000;
+      if (t.territorial && a.home) {
+        a.target = randPointInCircle(a.home.x, a.home.y, t.territoryRadius * 0.7);
+      } else {
+        const r = Math.random();
+        const farChance = 0.45 * a.roamMul;
+        const randChance = 0.15;
+        if (r < randChance) {
+          a.target = randPointInPond();
+        } else if (r < randChance + farChance) {
+          a.target = randPointInCircle(POND_W/2, POND_H/2, Math.min(POND_W, POND_H) * 0.45);
+        } else {
+          a.target = randPointInCircle(ZONES.play.x, ZONES.play.y, ZONES.play.r);
+        }
+      }
+    }
+  }
+
+  // ============================================================
+  // Step (physics)
+  // ============================================================
+  function step(a, dtSim) {
+    const t = SPECIES[a.species];
+    const dtSec = dtSim / 1000;
+
+    a.ageMs += dtSim;
+    a.hunger += dtSim * HUNGER_RATE * a.hungerMul;
+    if (a.fightCooldownMs > 0) a.fightCooldownMs -= dtSim;
+    if (a.intraCdMs > 0) a.intraCdMs -= dtSim;
+    if (a.threatenRewardCdMs > 0) a.threatenRewardCdMs -= dtSim;
+
+    // Starvation HP drain
+    if (a.state !== 'dying' && a.hunger > HUNGER_STARVE_THRESHOLD) {
+      a.hp -= dtSim * STARVE_HP_DRAIN;
+    }
+
+    if (a.state !== 'dying') {
+      if (a.ageMs >= a.lifespanMs) {
+        a.state = 'dying';
+        logI18n('log.sank', t.statIdx, spLabel(a.species), a.id);
+      } else if (a.hp <= 0) {
+        a.state = 'dying';
+        if (a.sick) {
+          logI18n('log.plagueDeath', t.statIdx, spLabel(a.species), a.id);
+        } else if (a.hunger > HUNGER_STARVE_THRESHOLD) {
+          logI18n('log.starved', t.statIdx, spLabel(a.species), a.id);
+        } else {
+          logI18n('log.battleFall', t.statIdx, spLabel(a.species), a.id);
+        }
+      }
+    }
+
+    if (a.state === 'dying') {
+      a.dyingMs += dtSim;
+      a.y += 0.006 * dtSim;
+      if (a.dyingMs > 2000) a.marked = true;
+      return;
+    }
+
+    let fx = 0, fy = 0;
+
+    // Resolve the agent we're currently focused on
+    // - fight: look up by fightingWith (supports intra-species)
+    // - flee: nearest non-same-species threat (behavior unchanged)
+    // - threaten: the specific target being warned
+    let threat = null;
+    if (a.state === 'fight' && a.fightingWith) {
+      threat = agents.find(x => x.id === a.fightingWith && x.state !== 'dying') || null;
+    } else if (a.state === 'flee') {
+      let bd2 = t.fleeRadius * t.fleeRadius * 1.5;
+      for (const b of agents) {
+        if (b === a || b.species === a.species || b.state === 'dying') continue;
+        const d2 = dist2(a.x, a.y, b.x, b.y);
+        if (d2 < bd2) { bd2 = d2; threat = b; }
+      }
+    } else if (a.state === 'threaten' && a.threatenTarget) {
+      threat = agents.find(x => x.id === a.threatenTarget && x.state !== 'dying') || null;
+    }
+
+    if (a.target && a.state !== 'flee' && a.state !== 'fight' && a.state !== 'threaten') {
+      const dx = a.target.x - a.x, dy = a.target.y - a.y;
+      const d = Math.hypot(dx, dy) || 1;
+      fx += (dx/d) * 40; fy += (dy/d) * 40;
+    }
+
+    if (a.state === 'flee' && threat) {
+      const dx = a.x - threat.x, dy = a.y - threat.y;
+      const d = Math.hypot(dx, dy) || 1;
+      fx += (dx/d) * 180; fy += (dy/d) * 180;
+    }
+
+    if (a.state === 'fight' && threat) {
+      const dx = threat.x - a.x, dy = threat.y - a.y;
+      const d = Math.hypot(dx, dy);
+      const accel = t.huntAccel || 120;    // v1.10: species-specific chase force
+      if (d > 0.1) { fx += (dx/d) * accel; fy += (dy/d) * accel; }
+      const contact = sizeOf(a) + sizeOf(threat) + 3;
+      if (d < contact) {
+        const dmg = 3 * dtSec * (t.dmgMul || 1.0);  // v1.10: species damage multiplier
+        const threatWasAlive = threat.hp > 0;
+        a.hp -= dmg; threat.hp -= dmg;
+        if (threatWasAlive && threat.hp <= 0) {
+          a.kills++;
+          a.hunger = Math.max(0, a.hunger - KILL_HUNGER_REWARD);
+          logI18n('log.prey',
+            t.statIdx, spLabel(a.species), a.id,
+            SPECIES[threat.species].statIdx, spLabel(threat.species), threat.id);
+        }
+      }
+    }
+
+    // Threaten: stand still, face the target (no force). Physics otherwise normal
+    // (damping will still stop motion). Target (prey) gets a flee-intensity bump below.
+    // No attractive force during threaten — Guard holds its ground.
+
+    // Boid (same-species)
+    if (t.boidStrength > 0) {
+      let sepX=0,sepY=0,alnX=0,alnY=0,cohX=0,cohY=0,n=0;
+      const Rs = 1600, Rsep2 = 196;
+      for (const b of agents) {
+        if (b === a || b.species !== a.species || b.state === 'dying') continue;
+        const dx = b.x - a.x, dy = b.y - a.y;
+        const d2 = dx*dx + dy*dy;
+        if (d2 < Rs) {
+          if (d2 < Rsep2 && d2 > 0) { const d = Math.sqrt(d2); sepX -= dx/d; sepY -= dy/d; }
+          alnX += b.vx; alnY += b.vy; cohX += b.x; cohY += b.y; n++;
+        }
+      }
+      if (n > 0) {
+        const s = t.boidStrength;
+        fx += sepX * 80 * s; fy += sepY * 80 * s;
+        fx += (alnX/n) * 0.3 * s; fy += (alnY/n) * 0.3 * s;
+        fx += (cohX/n - a.x) * 0.6 * s; fy += (cohY/n - a.y) * 0.6 * s;
+      }
+    }
+
+    // Mating season — same-species attraction toward nearest mate (all species)
+    if (isMatingSeason() && a.state === 'play' &&
+        a.ageMs > a.lifespanMs * 0.2 && a.ageMs < a.lifespanMs * 0.9) {
+      let nearestMate = null, nmd2 = Infinity;
+      for (const b of agents) {
+        if (b === a || b.species !== a.species || b.state === 'dying') continue;
+        if (b.ageMs < b.lifespanMs * 0.2) continue;
+        const dx = b.x - a.x, dy = b.y - a.y;
+        const d2 = dx*dx + dy*dy;
+        if (d2 < nmd2) { nmd2 = d2; nearestMate = b; }
+      }
+      // Pull toward mate (only if reasonably far — avoid jitter at contact)
+      if (nearestMate && nmd2 > 100 && nmd2 < 78400) {      // 280px range (B)
+        const dx = nearestMate.x - a.x, dy = nearestMate.y - a.y;
+        const d = Math.sqrt(nmd2);
+        fx += (dx/d) * 80;                                    // stronger than Dart's wander (B)
+        fy += (dy/d) * 80;
+      }
+    }
+
+    // v1.13: Rare-species mate seeking — count<4, play state only, unlimited range.
+    // Adult-age window. Not active during rest/hungry/flee/fight/threaten (those
+    // take priority in their own state). Strong pull (150) — survival-critical action.
+    const rareSpecies = speciesCounts[a.species] < 4;
+    if (rareSpecies && a.state === 'play' &&
+        a.ageMs > a.lifespanMs * 0.2 && a.ageMs < a.lifespanMs * 0.9) {
+      let nearestMate = null, nmd2 = Infinity;
+      for (const b of agents) {
+        if (b === a || b.species !== a.species || b.state === 'dying') continue;
+        if (b.ageMs < b.lifespanMs * 0.2) continue;
+        const dx = b.x - a.x, dy = b.y - a.y;
+        const d2 = dx*dx + dy*dy;
+        if (d2 < nmd2) { nmd2 = d2; nearestMate = b; }
+      }
+      if (nearestMate && nmd2 > 100) {
+        const dx = nearestMate.x - a.x, dy = nearestMate.y - a.y;
+        const d = Math.sqrt(nmd2);
+        fx += (dx/d) * 150;
+        fy += (dy/d) * 150;
+        // v1.14: override target so roam-direction aligns with the pull.
+        // Prevents the "stale target while mate is nearby" effect.
+        a.target = { x: nearestMate.x, y: nearestMate.y };
+      }
+    }
+
+    // Wander
+    fx += (Math.random() - 0.5) * t.wander * 30;
+    fy += (Math.random() - 0.5) * t.wander * 30;
+
+    // Curiosity burst
+    if (a.state === 'play' && Math.random() < 0.003) {
+      const ang = Math.random() * Math.PI * 2;
+      const mag = 30 + Math.random() * 40;
+      fx += Math.cos(ang) * mag;
+      fy += Math.sin(ang) * mag;
+    }
+
+    // Boundary
+    const M = 18;
+    if (a.x < M)          fx += (M - a.x) * 5;
+    if (a.x > POND_W - M) fx -= (a.x - (POND_W - M)) * 5;
+    if (a.y < M)          fy += (M - a.y) * 5;
+    if (a.y > POND_H - M) fy -= (a.y - (POND_H - M)) * 5;
+
+    a.vx += fx * dtSec;
+    a.vy += fy * dtSec;
+
+    const stateMul = a.state === 'flee' ? 1.5
+                    : a.state === 'fight' ? 1.25
+                    : a.state === 'threaten' ? 0.0
+                    : 1.0;
+    const killBonus = 1 + Math.min(a.kills * KILL_GROWTH_PER, KILL_GROWTH_CAP);
+    // v1.13: rare species (count<4) move faster in all states
+    const rareBoost = speciesCounts[a.species] < 4 ? 1.2 : 1.0;
+    const maxSpd = t.speed * a.speedMul * stateMul * killBonus * rareBoost;
+    const sp = Math.hypot(a.vx, a.vy);
+    if (sp > maxSpd) { a.vx = a.vx/sp*maxSpd; a.vy = a.vy/sp*maxSpd; }
+
+    const damp = Math.pow(0.55, dtSec);
+    a.vx *= damp; a.vy *= damp;
+    a.x += a.vx * dtSec; a.y += a.vy * dtSec;
+
+    a._trailAcc += dtSim;
+    if (a._trailAcc > 60) {
+      a._trailAcc = 0;
+      a.trail.push({ x: a.x, y: a.y });
+      if (a.trail.length > TRAIL_LEN) a.trail.shift();
+    }
+
+    // Zone effects
+    for (const z of ZONES.feeders) {
+      if (dist2(a.x, a.y, z.x, z.y) < z.r * z.r) {
+        a.hunger = Math.max(0, a.hunger - dtSim * 0.05);
+      }
+    }
+    const aHpMax = hpMaxOf(a);
+    for (const z of ZONES.rests) {
+      if (dist2(a.x, a.y, z.x, z.y) < z.r * z.r) {
+        a.hp = Math.min(aHpMax, a.hp + dtSim * 0.008);
+      }
+    }
+
+    // Drift aura — heal nearby (including self with bonus). BASIC tier (8s+).
+    // Sick agents receive no healing from aura (v1.7 — match with aura source exclusion)
+    if (!a.sick) {
+      for (const d of driftAuraBasic) {
+        const dd2 = dist2(a.x, a.y, d.x, d.y);
+        const aR = SPECIES.drift.auraRadius;
+        if (dd2 < aR * aR) {
+          const selfBonus = (d === a) ? SPECIES.drift.auraSelfBonus : 1.0;
+          a.hp = Math.min(aHpMax,
+            a.hp + dtSim * 0.001 * SPECIES.drift.auraHealRate * selfBonus);
+        }
+      }
+    }
+
+    // Natural HP regen — slow, only when not fighting, not starving, AND not sick.
+    // Pack: flock healing bonus (v1.5) — x1.5 when 2+ packmates nearby
+    if (a.state !== 'fight' && a.hunger < HUNGER_STARVE_THRESHOLD && !a.sick) {
+      let healMul = 1.0;
+      if (t.flockHealRadius) {
+        let mates = 0;
+        const r2 = t.flockHealRadius * t.flockHealRadius;
+        for (const b of agents) {
+          if (b === a || b.species !== a.species || b.state === 'dying') continue;
+          if (dist2(a.x, a.y, b.x, b.y) < r2) {
+            mates++;
+            if (mates >= 2) break;
+          }
+        }
+        if (mates >= 2) healMul = t.flockHealMul || 1.5;
+      }
+      a.hp = Math.min(aHpMax, a.hp + dtSim * NATURAL_HEAL_RATE * healMul);
+    }
+
+    // Plague HP drain — runs while sick regardless of state
+    // v1.12: each individual has its own severity (0.2-0.8 HP/sec), set on infection
+    if (a.sick) {
+      a.hp -= dtSim * (a.sickDrainPerMs || PLAGUE_HP_DRAIN_MIN);
+    }
+
+    // Cap HP at current age-scaled max (defensive)
+    if (a.hp > aHpMax) a.hp = aHpMax;
+
+    // Absolute position clamp — guarantee no escape from pond
+    if (a.x < 2)            { a.x = 2;            if (a.vx < 0) a.vx = 0; }
+    if (a.x > POND_W - 2)   { a.x = POND_W - 2;   if (a.vx > 0) a.vx = 0; }
+    if (a.y < 2)            { a.y = 2;            if (a.vy < 0) a.vy = 0; }
+    if (a.y > POND_H - 2)   { a.y = POND_H - 2;   if (a.vy > 0) a.vy = 0; }
+  }
+
+  // ============================================================
+  // Food
+  // ============================================================
+  function stepFood(dtSim) {
+    for (let i = foodCrumbs.length - 1; i >= 0; i--) {
+      const f = foodCrumbs[i];
+      f.ageMs += dtSim;
+      for (const a of agents) {
+        if (a.state === 'dying') continue;
+        if (dist2(a.x, a.y, f.x, f.y) < 100) {
+          a.hunger = 0;  // full satiation
+          f.consumed = true;
+          pushEffect({ kind: 'food-eat', x: f.x, y: f.y, r: 14, ageMs: 0, lifeMs: 600 });
+          break;
+        }
+      }
+      if (f.consumed || f.ageMs >= FOOD_LIFE_MS) {
+        foodCrumbs.splice(i, 1);
+      }
+    }
+  }
+  function placeFood(x, y) {
+    foodCrumbs.push({ x, y, ageMs: 0, consumed: false });
+    pushEffect({ kind: 'food-drop', x, y, r: 8, ageMs: 0, lifeMs: 600 });
+  }
+
+  // ============================================================
+  // Effects
+  // ============================================================
+  function pushEffect(e) { effects.push(e); }
+  function stepEffects(dtSim) {
+    for (let i = effects.length - 1; i >= 0; i--) {
+      effects[i].ageMs += dtSim;
+      if (effects[i].ageMs >= effects[i].lifeMs) effects.splice(i, 1);
+    }
+  }
+
+  // ============================================================
+  // Reproduction (boosted during season)
+  // ============================================================
+  // v1.11/v1.13: state-based reproduction eligibility.
+  // Returns a probability multiplier for this agent's state (0 = cannot mate).
+  //   Normal (count >= 4):
+  //     - play: 1.0 (all species)
+  //     - rest/flee: Dart/Pack only (×0.5, ×0.6)
+  //   Rare (count < 4): all states except fight/threaten/dying are eligible for ALL species
+  //     - play 1.0, rest 0.5, flee 0.6, hungry 0.3
+  //     - fight/threaten/dying: 0 (never, even rare)
+  function reproEligibility(state, rare) {
+    if (state === 'fight' || state === 'dying') return 0;
+    if (state === 'play') return 1.0;
+    if (rare) {
+      if (state === 'rest') return 0.5;
+      if (state === 'flee') return 0.6;
+      if (state === 'hungry') return 0.3;
+      if (state === 'threaten') return 0.3;
+      return 0;
+    }
+    return 0;
+  }
+  // Whether a weak species allows its state in normal (non-rare) conditions.
+  function reproEligibilityWeak(state) {
+    if (state === 'rest') return 0.5;
+    if (state === 'flee') return 0.6;
+    return 0;
+  }
+
+  function checkReproduction(dtSim) {
+    lastReproCheck += dtSim;
+    if (lastReproCheck < 2500) return;
+    lastReproCheck = 0;
+    if (agents.length >= POP_CAP) return;
+
+    // Count living agents per species first — we need this to decide eligibility
+    const counts = { drift: 0, dart: 0, pack: 0, guard: 0 };
+    for (const a of agents) {
+      if (a.state !== 'dying') counts[a.species]++;
+    }
+
+    // Build candidate list. An agent qualifies if:
+    //   - adult age (between 20% and 90% of lifespan)
+    //   - state-based eligibility > 0 given its species rarity
+    // Each candidate carries its own state multiplier.
+    const candidates = [];
+    for (const a of agents) {
+      if (a.ageMs <= a.lifespanMs * 0.2) continue;
+      if (a.ageMs >= a.lifespanMs * 0.9) continue;
+      // v1.13: rare threshold unified to count<4 (was count<3 for state relaxation)
+      const rare = counts[a.species] < 4;
+      const isWeak = (a.species === 'dart' || a.species === 'pack');
+      let mul = reproEligibility(a.state, rare);
+      // In normal conditions, Dart/Pack get rest/flee bonus states too
+      if (mul === 0 && !rare && isWeak) {
+        mul = reproEligibilityWeak(a.state);
+      }
+      if (mul > 0) candidates.push({ agent: a, stateMul: mul });
+    }
+
+    const seasonal = isMatingSeason();
+    const dist2Threshold = seasonal ? 1600 : 900;
+    const baseProb = seasonal ? 0.25 : 0.10;
+
+    for (let i = 0; i < candidates.length; i++) {
+      for (let j = i + 1; j < candidates.length; j++) {
+        const ca = candidates[i], cb = candidates[j];
+        const a = ca.agent, b = cb.agent;
+        if (a.species !== b.species) continue;
+        const d2 = dist2(a.x, a.y, b.x, b.y);
+        const speciesFactor = SPECIES[a.species].reproFactor || 1.0;
+        // v1.11: tiered rarity boost (×3 when <3, ×2 when <4)
+        // v1.12: overcrowding penalty (×0.4 when >30, ×0.3 when >40)
+        const c = counts[a.species];
+        const rarityBoost = c < 3 ? 3.0 : c < 4 ? 2.0 : 1.0;
+        const crowdPenalty = c > CROWD_PENALTY_HARD_THRESHOLD ? CROWD_PENALTY_HARD_MUL
+                           : c > CROWD_PENALTY_MILD_THRESHOLD ? CROWD_PENALTY_MILD_MUL
+                           : 1.0;
+        const stateMul = ca.stateMul * cb.stateMul;
+        const prob = baseProb * speciesFactor * rarityBoost * crowdPenalty * stateMul;
+        if (d2 < dist2Threshold && Math.random() < prob) {
+          const baby = spawnAgent(a.species, (a.x + b.x)/2, (a.y + b.y)/2, true);
+          if (baby) {
+            const tags =
+              (seasonal ? t('log.bornSuffix.season') : '') +
+              (rarityBoost > 1 ? t('log.bornSuffix.rare') : '');
+            logEvent({ html: t('log.born',
+              SPECIES[a.species].statIdx, spLabel(a.species), baby.id) + tags });
+            return;
+          }
+        }
+      }
+    }
+  }
+
+  // ============================================================
+  // Tools
+  // ============================================================
+  function applyTool(x, y) {
+    const tool = TOOLS[activeTool];
+    const cost = tool.cost(selectedSpecies);
+    if (seeds < cost) { logI18n('log.noSeeds'); return; }
+
+    switch (activeTool) {
+      case 'release': {
+        const ag = spawnAgent(selectedSpecies, x, y, false);
+        if (ag) logI18n('log.released',
+          SPECIES[selectedSpecies].statIdx, spLabel(selectedSpecies), ag.id);
+        break;
+      }
+      case 'summon': {
+        seeds -= cost;
+        let n = 0;
+        for (const a of agents) {
+          if (a.species !== selectedSpecies) continue;
+          if (a.state === 'dying' || a.state === 'fight') continue;
+          if (a.hunger > HUNGER_HUNGRY_THRESHOLD) continue;
+          a.target = { x, y };
+          if (a.state === 'flee') a.state = 'play';
+          n++;
+        }
+        if (n > 0) logI18n('log.summoned',
+          SPECIES[selectedSpecies].statIdx, n, spLabel(selectedSpecies));
+        else logI18n('log.summonNone', spLabel(selectedSpecies));
+        pushEffect({ kind: 'summon', x, y, r: 30, ageMs: 0, lifeMs: 800,
+                     color: colorCache[selectedSpecies] });
+        break;
+      }
+      case 'food': {
+        seeds -= cost;
+        placeFood(x, y);
+        logI18n('log.foodDrop');
+        break;
+      }
+      case 'heal': {
+        seeds -= cost;
+        const R = 60;
+        let n = 0;
+        for (const a of agents) {
+          if (a.state === 'dying') continue;
+          if (dist2(a.x, a.y, x, y) < R * R) {
+            a.hp = hpMaxOf(a);
+            if (a.state === 'fight') { a.state = 'play'; a.fightCooldownMs = 5000; }
+            if (a.sick) { a.sick = false; a.sickAgeMs = 0; }
+            n++;
+          }
+        }
+        if (n > 0) logI18n('log.healed', n);
+        pushEffect({ kind: 'heal', x, y, r: R, ageMs: 0, lifeMs: 1200 });
+        break;
+      }
+      case 'peace': {
+        seeds -= cost;
+        const R = 80;
+        let n = 0;
+        for (const a of agents) {
+          if (a.state === 'dying') continue;
+          if (dist2(a.x, a.y, x, y) < R * R) {
+            if (a.state === 'fight') { a.state = 'play'; n++; }
+            a.fightCooldownMs = Math.max(a.fightCooldownMs, 15000);
+          }
+        }
+        if (n > 0) logI18n('log.peaced', n);
+        else logI18n('log.peacedNone');
+        pushEffect({ kind: 'peace', x, y, r: R, ageMs: 0, lifeMs: 1500 });
+        break;
+      }
+    }
+  }
+
+  // ============================================================
+  // Log
+  // ============================================================
+  const LOG_MAX = 80;
+  const logBuf = [];
+  // Allow only specific span class names in log HTML to be trusted.
+  // Any other HTML coming in will be escaped.
+  const LOG_ALLOWED_CLASSES = /^(s[1-4]|ev-heal|ev-peace|ev-food|ev-season|ev-aura|ev-sick|prefix)$/;
+
+  function escapeHtml(s) {
+    return String(s).replace(/[&<>"']/g, ch => ({
+      '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'
+    })[ch]);
+  }
+
+  // Sanitize a log HTML fragment:
+  // - Allow <span class="X">...</span> only if X is in LOG_ALLOWED_CLASSES
+  // - Escape anything else
+  function sanitizeLogHtml(html) {
+    const parts = [];
+    let i = 0;
+    while (i < html.length) {
+      const ltIdx = html.indexOf('<', i);
+      if (ltIdx < 0) { parts.push(escapeHtml(html.slice(i))); break; }
+      if (ltIdx > i) parts.push(escapeHtml(html.slice(i, ltIdx)));
+      // Try to match an allowed <span class="..."> or </span>
+      const openMatch = /^<span\s+class="([^"<>]+)"\s*>/i.exec(html.slice(ltIdx));
+      if (openMatch && LOG_ALLOWED_CLASSES.test(openMatch[1])) {
+        parts.push(`<span class="${openMatch[1]}">`);
+        i = ltIdx + openMatch[0].length;
+        continue;
+      }
+      const closeMatch = /^<\/span>/i.exec(html.slice(ltIdx));
+      if (closeMatch) {
+        parts.push('</span>');
+        i = ltIdx + closeMatch[0].length;
+        continue;
+      }
+      // Escape any other '<' and advance one char
+      parts.push('&lt;');
+      i = ltIdx + 1;
+    }
+    return parts.join('');
+  }
+
+  // logEvent accepts either:
+  //   - a plain string (will be HTML-escaped)
+  //   - {html: '...'} wrapper (will be sanitized to allow only known spans)
+  function logEvent(payload) {
+    const d = new Date();
+    const hh = String(d.getHours()).padStart(2, '0');
+    const mm = String(d.getMinutes()).padStart(2, '0');
+    const ss = String(d.getSeconds()).padStart(2, '0');
+    let html;
+    if (payload && typeof payload === 'object' && typeof payload.html === 'string') {
+      html = sanitizeLogHtml(payload.html);
+    } else {
+      html = escapeHtml(String(payload));
+    }
+    logBuf.unshift({ time: `${hh}:${mm}:${ss}`, html });
+    if (logBuf.length > LOG_MAX) logBuf.pop();
+    renderLog();
+  }
+  // Convenience wrapper for i18n-templated HTML messages
+  function logI18n(key, ...args) {
+    logEvent({ html: t(key, ...args) });
+  }
+  function renderLog() {
+    elLog.innerHTML = logBuf.map((e, i) =>
+      `<div class="entry${i === 0 ? ' new' : ''}">` +
+      `<span class="prefix">// ${escapeHtml(e.time)}</span> ${e.html}` +
+      `</div>`
+    ).join('');
+  }
+
+  // ============================================================
+  // Render
+  // ============================================================
+  let hoveredAgent = null;
+
+  function sizeOf(a) {
+    const t = SPECIES[a.species];
+    const lf = Math.min(1, a.ageMs / a.lifespanMs);
+    // v1.9: peak doubled (1.25 → 2.50), keeping the original curve shape.
+    // Anchor points: 0.45 (newborn, unchanged) → 1.859 (adult) → 2.116 (old) → 2.50 (elder).
+    // The growth between stages is proportional to the original (0.55/0.10/0.15 widths).
+    let scale;
+    if (lf < 0.4) {
+      scale = 0.45 + 1.409 * (lf / 0.4);               // 0.45 → 1.859
+    } else if (lf < 0.85) {
+      scale = 1.859 + 0.256 * ((lf - 0.4) / 0.45);     // 1.859 → 2.116
+    } else {
+      scale = 2.116 + 0.384 * ((lf - 0.85) / 0.15);    // 2.116 → 2.50
+    }
+    const killBonus = 1 + Math.min(a.kills * KILL_GROWTH_PER, KILL_GROWTH_CAP);
+    return t.size * a.sizeMul * scale * killBonus;
+  }
+
+  function drawZones() {
+    const pz = ZONES.play;
+    const pg = ctx.createRadialGradient(pz.x, pz.y, 0, pz.x, pz.y, pz.r);
+    pg.addColorStop(0, 'rgba(255,255,255,0.04)');
+    pg.addColorStop(1, 'rgba(255,255,255,0)');
+    ctx.fillStyle = pg; ctx.fillRect(0, 0, POND_W, POND_H);
+
+    for (const z of ZONES.feeders) {
+      const g = ctx.createRadialGradient(z.x, z.y, 0, z.x, z.y, z.r);
+      g.addColorStop(0, 'rgba(232,184,66,0.07)');
+      g.addColorStop(1, 'rgba(232,184,66,0)');
+      ctx.fillStyle = g; ctx.fillRect(0, 0, POND_W, POND_H);
+    }
+    for (const z of ZONES.rests) {
+      const g = ctx.createRadialGradient(z.x, z.y, 0, z.x, z.y, z.r);
+      g.addColorStop(0, 'rgba(157,138,232,0.06)');
+      g.addColorStop(1, 'rgba(157,138,232,0)');
+      ctx.fillStyle = g; ctx.fillRect(0, 0, POND_W, POND_H);
+    }
+    ctx.strokeStyle = colorCache.guard;
+    ctx.globalAlpha = 0.09; ctx.lineWidth = 1;
+    for (const a of agents) {
+      if (a.species === 'guard' && a.home && a.state !== 'dying') {
+        ctx.beginPath();
+        ctx.arc(a.home.x, a.home.y, SPECIES.guard.territoryRadius, 0, Math.PI * 2);
+        ctx.stroke();
+      }
+    }
+    ctx.globalAlpha = 1;
+  }
+
+  function drawDriftAuras(now) {
+    for (const d of driftAuraBasic) {
+      const r = SPECIES.drift.auraRadius;
+      const isElder = d.ageMs > DRIFT_AURA_ELDER_AGE;
+      const pulse = 0.85 + Math.sin(now / 1200 + d.id) * 0.12;
+      const peakAlpha = isElder ? 0.08 : 0.05;  // elders glow slightly stronger
+      const g = ctx.createRadialGradient(d.x, d.y, 0, d.x, d.y, r * pulse);
+      g.addColorStop(0, 'rgba(255,255,255,0)');
+      g.addColorStop(0.5, `rgba(125,211,192,${peakAlpha})`);
+      g.addColorStop(1, 'rgba(125,211,192,0)');
+      ctx.fillStyle = g;
+      ctx.fillRect(0, 0, POND_W, POND_H);
+    }
+  }
+
+  function drawSeasonOverlay(now) {
+    if (!isMatingSeason()) return;
+    // Subtle rosy tint at edges
+    const pulse = 0.04 + Math.sin(now / 800) * 0.015;
+    const g = ctx.createRadialGradient(POND_W/2, POND_H/2, POND_W/3,
+                                        POND_W/2, POND_H/2, POND_W/1.4);
+    g.addColorStop(0, 'rgba(255,142,179,0)');
+    g.addColorStop(1, `rgba(255,142,179,${pulse})`);
+    ctx.fillStyle = g;
+    ctx.fillRect(0, 0, POND_W, POND_H);
+  }
+
+  function drawFood(now) {
+    for (const f of foodCrumbs) {
+      const fadeIn = Math.min(1, f.ageMs / 400);
+      const fadeOut = Math.min(1, (FOOD_LIFE_MS - f.ageMs) / 4000);
+      const alpha = Math.min(fadeIn, fadeOut);
+      const pulse = 1 + Math.sin((now + f.ageMs) / 220) * 0.15;
+      ctx.save();
+      ctx.globalAlpha = alpha * 0.45;
+      ctx.shadowColor = colorCache._food;
+      ctx.shadowBlur = FOOD_RADIUS * 3;
+      ctx.fillStyle = colorCache._food;
+      ctx.beginPath();
+      ctx.arc(f.x, f.y, FOOD_RADIUS * pulse * 1.4, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.restore();
+      ctx.globalAlpha = alpha;
+      ctx.fillStyle = colorCache._food;
+      ctx.beginPath();
+      ctx.arc(f.x, f.y, FOOD_RADIUS, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.globalAlpha = 1;
+    }
+  }
+
+  function drawEffects() {
+    for (const e of effects) {
+      const t = e.ageMs / e.lifeMs;
+      const alpha = 1 - t;
+      const r = e.r * (0.4 + 0.7 * t);
+      let col = '#ffffff';
+      if (e.kind === 'heal')      col = colorCache._heal;
+      else if (e.kind === 'peace') col = colorCache._peace;
+      else if (e.kind === 'food-drop') col = colorCache._food;
+      else if (e.kind === 'food-eat')  col = colorCache._food;
+      else if (e.kind === 'summon') col = e.color || colorCache.drift;
+      ctx.strokeStyle = col;
+      ctx.lineWidth = 1.5;
+      ctx.globalAlpha = alpha * 0.7;
+      ctx.beginPath();
+      ctx.arc(e.x, e.y, r, 0, Math.PI * 2);
+      ctx.stroke();
+      ctx.globalAlpha = 1;
+    }
+  }
+
+  function drawTrail(a) {
+    if (a.trail.length < 2) return;
+    const col = colorCache[a.species];
+    ctx.strokeStyle = col;
+    ctx.lineCap = 'round';
+    const baseW = sizeOf(a) * 0.7;
+    for (let i = 1; i < a.trail.length; i++) {
+      const p0 = a.trail[i-1], p1 = a.trail[i];
+      ctx.globalAlpha = (i / a.trail.length) * 0.28;
+      ctx.lineWidth = Math.max(0.5, baseW * (i / a.trail.length));
+      ctx.beginPath();
+      ctx.moveTo(p0.x, p0.y); ctx.lineTo(p1.x, p1.y);
+      ctx.stroke();
+    }
+    ctx.globalAlpha = 1;
+  }
+
+  function drawAgent(a, now) {
+    const col = colorCache[a.species];
+    const r = sizeOf(a);
+    const alpha = (a.state === 'dying') ? Math.max(0, 1 - a.dyingMs / 2000) : 1;
+
+    // Glow
+    ctx.save();
+    ctx.globalAlpha = alpha * 0.5;
+    ctx.shadowColor = col; ctx.shadowBlur = r * 2;
+    ctx.fillStyle = col;
+    ctx.beginPath(); ctx.arc(a.x, a.y, r, 0, Math.PI * 2); ctx.fill();
+    ctx.restore();
+
+    // Core
+    ctx.globalAlpha = alpha * (a.sick ? 0.55 : 1.0);  // sick: semi-transparent core
+    ctx.fillStyle = col;
+    ctx.beginPath(); ctx.arc(a.x, a.y, r * 0.75, 0, Math.PI * 2); ctx.fill();
+    ctx.globalAlpha = alpha;
+
+    if (a.state === 'fight') {
+      const pulse = 1 + Math.sin(now / 90) * 0.18;
+      ctx.strokeStyle = colorCache._danger;
+      ctx.lineWidth = 1.3; ctx.globalAlpha = 0.75;
+      ctx.beginPath(); ctx.arc(a.x, a.y, (r + 2.5) * pulse, 0, Math.PI * 2); ctx.stroke();
+    }
+
+    // Threaten: slow expanding warning rings
+    if (a.state === 'threaten') {
+      ctx.strokeStyle = colorCache._danger;
+      ctx.lineWidth = 1.1;
+      const phase = (now / 600) % 1;
+      for (let k = 0; k < 2; k++) {
+        const p = (phase + k * 0.5) % 1;
+        ctx.globalAlpha = (1 - p) * 0.55;
+        ctx.beginPath();
+        ctx.arc(a.x, a.y, r + 2 + p * 10, 0, Math.PI * 2);
+        ctx.stroke();
+      }
+      ctx.globalAlpha = 1;
+    }
+
+    const aHpMax = hpMaxOf(a);
+    const hpFrac = a.hp / aHpMax;
+    if (hpFrac < 0.4 && a.state !== 'dying' && a.state !== 'fight') {
+      ctx.strokeStyle = colorCache._danger;
+      ctx.lineWidth = 0.8; ctx.globalAlpha = 0.6;
+      ctx.beginPath(); ctx.arc(a.x, a.y, r + 1, 0, Math.PI * 2); ctx.stroke();
+    }
+
+    // Starving — orange-ish dot above head
+    if (a.hunger > HUNGER_STARVE_THRESHOLD && a.state !== 'dying') {
+      ctx.fillStyle = '#ffa14a';
+      ctx.globalAlpha = 0.7 + Math.sin(now / 200) * 0.2;
+      ctx.beginPath();
+      ctx.arc(a.x, a.y - r - 3, 1.4, 0, Math.PI * 2);
+      ctx.fill();
+    }
+
+    // Sick (v1.7) — flickering pale-violet dots around the body
+    if (a.sick && a.state !== 'dying') {
+      ctx.fillStyle = '#c49dd8';
+      for (let k = 0; k < 3; k++) {
+        const ang = (now / 400 + k * 2.094 + a.id * 0.31) % (Math.PI * 2);
+        const rad = r + 2 + (k * 0.7);
+        const flick = 0.35 + Math.sin(now / 180 + k * 1.7 + a.id * 0.5) * 0.25;
+        ctx.globalAlpha = flick;
+        ctx.beginPath();
+        ctx.arc(a.x + Math.cos(ang) * rad, a.y + Math.sin(ang) * rad, 0.9, 0, Math.PI * 2);
+        ctx.fill();
+      }
+      ctx.globalAlpha = 1;
+    }
+
+    if (hoveredAgent === a) {
+      ctx.strokeStyle = '#ffffff';
+      ctx.lineWidth = 1; ctx.globalAlpha = 0.9;
+      ctx.beginPath(); ctx.arc(a.x, a.y, r + 3, 0, Math.PI * 2); ctx.stroke();
+    }
+
+    ctx.globalAlpha = 1;
+  }
+
+  function render() {
+    const now = performance.now();
+    ctx.fillStyle = '#0a0a0a';
+    ctx.fillRect(0, 0, POND_W, POND_H);
+
+    drawZones();
+    drawDriftAuras(now);
+    drawSeasonOverlay(now);
+    drawFood(now);
+    for (const a of agents) drawTrail(a);
+
+    const sorted = agents.slice().sort((a, b) =>
+      (a.state === 'dying' ? 0 : 1) - (b.state === 'dying' ? 0 : 1));
+    for (const a of sorted) drawAgent(a, now);
+
+    drawEffects();
+
+    // Stats
+    const counts = { 1: 0, 2: 0, 3: 0, 4: 0 };
+    for (const a of agents) if (a.state !== 'dying') counts[SPECIES[a.species].statIdx]++;
+    for (const k in counts) statEls[k].textContent = counts[k];
+    elSeed.textContent = seeds;
+
+    // Season indicator
+    if (isMatingSeason()) {
+      const remain = Math.max(0, Math.ceil((seasonUntil - simTime) / 1000));
+      elSeasonStat.textContent = `${remain}s`;
+      elSeasonBox.classList.add('active');
+      elSeasonBadge.classList.add('show');
+    } else {
+      elSeasonStat.textContent = '—';
+      elSeasonBox.classList.remove('active');
+      elSeasonBadge.classList.remove('show');
+    }
+  }
+
+  // ============================================================
+  // Input
+  // ============================================================
+  function canvasPosToWorld(e) {
+    const r = canvas.getBoundingClientRect();
+    return {
+      x: (e.clientX - r.left) / r.width  * POND_W,
+      y: (e.clientY - r.top)  / r.height * POND_H,
+    };
+  }
+  canvas.addEventListener('pointerdown', (e) => {
+    e.preventDefault();
+    const p = canvasPosToWorld(e);
+    applyTool(p.x, p.y);
+  });
+  canvas.addEventListener('pointermove', (e) => {
+    const p = canvasPosToWorld(e);
+    let best = null, bd = 900;
+    for (const a of agents) {
+      if (a.state === 'dying') continue;
+      const d = dist2(a.x, a.y, p.x, p.y);
+      if (d < bd) { bd = d; best = a; }
+    }
+    hoveredAgent = best;
+    if (best) {
+      const ageS = Math.floor(best.ageMs / 1000);
+      const lifeS = Math.floor(best.lifespanMs / 1000);
+      const hp = Math.max(0, Math.round(best.hp));
+      const hpMax = Math.round(hpMaxOf(best));
+      const hungerInt = Math.round(best.hunger);
+      const label = spLabel(best.species);
+      // Escape all interpolated values — defense against localStorage tampering
+      const safeId = escapeHtml(String(best.id));
+      const safeAge = escapeHtml(String(ageS));
+      const safeLife = escapeHtml(String(lifeS));
+      const safeHp = escapeHtml(String(hp));
+      const safeHpMax = escapeHtml(String(hpMax));
+      const safeHunger = escapeHtml(String(hungerInt));
+      const safeKills = escapeHtml(String(best.kills));
+      const killsSuffix = best.kills > 0
+        ? `<span class="sep">·</span>${escapeHtml(t('hover.kills'))} ${safeKills}`
+        : '';
+      const sickSuffix = best.sick
+        ? `<span class="sep">·</span><span class="ev-sick">${escapeHtml(t('hover.sick'))}</span>`
+        : '';
+      elHoverInfo.innerHTML =
+        `<span class="id">${escapeHtml(label)} #${safeId}</span>` +
+        `<span class="sep">·</span>${escapeHtml(t('hover.age'))} ${safeAge}s/${safeLife}s` +
+        `<span class="sep">·</span>${escapeHtml(t('hover.hp'))} ${safeHp}/${safeHpMax}` +
+        `<span class="sep">·</span>${escapeHtml(t('hover.hunger'))} ${safeHunger}` +
+        `<span class="sep">·</span>${escapeHtml(stateLabel(best.state))}` +
+        killsSuffix +
+        sickSuffix;
+      elHoverInfo.classList.add('show');
+    } else {
+      elHoverInfo.classList.remove('show');
+    }
+  });
+  canvas.addEventListener('pointerleave', () => {
+    hoveredAgent = null;
+    elHoverInfo.classList.remove('show');
+  });
+  canvas.addEventListener('contextmenu', e => e.preventDefault());
+
+  // ============================================================
+  // Controls
+  // ============================================================
+  function updatePlayButton() {
+    btnPlay.textContent = running ? t('ctl.pause') : t('ctl.play');
+  }
+  btnPlay.addEventListener('click', () => {
+    running = !running;
+    updatePlayButton();
+  });
+  elSpeed.addEventListener('input', () => {
+    simSpeed = parseInt(elSpeed.value, 10) / 100;
+    elSpeedVal.textContent = simSpeed.toFixed(2) + '×';
+  });
+  simSpeed = parseInt(elSpeed.value, 10) / 100;
+  elSpeedVal.textContent = simSpeed.toFixed(2) + '×';
+
+  function setSpecies(k) {
+    selectedSpecies = k;
+    for (const key in speciesBtns) {
+      speciesBtns[key].classList.toggle('active', key === k);
+    }
+    setTool('release');
+    updateToolStatus();
+  }
+  for (const k in speciesBtns) {
+    speciesBtns[k].addEventListener('click', () => setSpecies(k));
+  }
+
+  function setTool(name) {
+    activeTool = name;
+    for (const key in toolBtns) {
+      toolBtns[key].classList.toggle('active', key === name);
+    }
+    updateToolStatus();
+  }
+  for (const name in toolBtns) {
+    toolBtns[name].addEventListener('click', () => setTool(name));
+  }
+
+  function updateToolStatus() {
+    const tool = TOOLS[activeTool];
+    const cost = tool.cost(selectedSpecies);
+    const toolName = t('tool.' + activeTool);
+    let label = toolName;
+    if (tool.needsSpecies) {
+      label = `${toolName} ${spLabel(selectedSpecies)}`;
+    }
+    elToolStatus.innerHTML = `<span class="name">${escapeHtml(label)}</span><span class="cost">·${cost}</span>`;
+  }
+
+  btnClear.addEventListener('click', () => {
+    agents.length = 0;
+    foodCrumbs.length = 0;
+    effects.length = 0;
+    seeds = SEED_MAX;
+    seasonUntil = 0;
+    seasonNextCheck = 60000 + Math.random() * 30000;
+    logI18n('log.pondCleared');
+  });
+  btnSeed.addEventListener('click', () => {
+    // 4 species x 5 individuals. Eight candidate zones (four corners + four edge midpoints)
+    // are shuffled; the first four go to the four species. Layouts vary widely between seeds.
+    const zones = [
+      { x: POND_W * 0.28, y: POND_H * 0.32, r: 55 },  // NW
+      { x: POND_W * 0.72, y: POND_H * 0.32, r: 55 },  // NE
+      { x: POND_W * 0.28, y: POND_H * 0.68, r: 55 },  // SW
+      { x: POND_W * 0.72, y: POND_H * 0.68, r: 55 },  // SE
+      { x: POND_W * 0.50, y: POND_H * 0.22, r: 55 },  // N
+      { x: POND_W * 0.50, y: POND_H * 0.78, r: 55 },  // S
+      { x: POND_W * 0.18, y: POND_H * 0.50, r: 55 },  // W
+      { x: POND_W * 0.82, y: POND_H * 0.50, r: 55 },  // E
+    ];
+    // Fisher-Yates shuffle, take the first 4
+    for (let i = zones.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [zones[i], zones[j]] = [zones[j], zones[i]];
+    }
+    SPECIES_KEYS.forEach((sp, idx) => {
+      const z = zones[idx];
+      for (let i = 0; i < 5; i++) {
+        const p = randPointInCircle(z.x, z.y, z.r);
+        spawnAgent(sp, p.x, p.y, true);
+      }
+    });
+    logI18n('log.pondSeeded');
+  });
+
+  document.addEventListener('keydown', (e) => {
+    if (e.target.tagName === 'INPUT' || e.target.tagName === 'SELECT') return;
+    switch (e.key) {
+      case ' ': btnPlay.click(); e.preventDefault(); break;
+      case '1': setSpecies('drift'); break;
+      case '2': setSpecies('dart'); break;
+      case '3': setSpecies('pack'); break;
+      case '4': setSpecies('guard'); break;
+      case 'q': case 'Q': setTool('release'); break;
+      case 'w': case 'W': setTool('summon'); break;
+      case 'e': case 'E': setTool('food'); break;
+      case 'r': case 'R':
+        if (e.shiftKey) btnSeed.click(); else setTool('heal');
+        break;
+      case 't': case 'T': setTool('peace'); break;
+      case 'c': case 'C': btnClear.click(); break;
+    }
+  });
+
+  // ============================================================
+  // Persistence
+  // ============================================================
+  function save() {
+    try {
+      const payload = {
+        v: SAVE_VERSION,
+        agents: agents.map(a => ({
+          id: a.id, species: a.species, x: a.x, y: a.y, vx: a.vx, vy: a.vy,
+          ageMs: a.ageMs, lifespanMs: a.lifespanMs, hp: a.hp, hunger: a.hunger,
+          sick: a.sick, sickAgeMs: a.sickAgeMs, sickDrainPerMs: a.sickDrainPerMs,
+          kills: a.kills,
+          adrenRate: a.adrenRate,
+          state: (a.state === 'dying' || a.state === 'fight' || a.state === 'threaten')
+                  ? 'play' : a.state,
+          speedMul: a.speedMul, sizeMul: a.sizeMul, warinessMul: a.warinessMul,
+          hungerMul: a.hungerMul, roamMul: a.roamMul,
+          home: a.home,
+        })),
+        food: foodCrumbs.map(f => ({ x: f.x, y: f.y, ageMs: f.ageMs })),
+        nextId, seeds,
+        selectedSpecies, activeTool, simSpeed,
+        simTime, seasonNextCheck, seasonUntil,
+        theme: document.documentElement.dataset.theme || 'calm',
+      };
+      localStorage.setItem(SAVE_KEY, JSON.stringify(payload));
+    } catch (_) {}
+  }
+  function load() {
+    try {
+      const raw = localStorage.getItem(SAVE_KEY);
+      if (!raw) return false;
+      const p = JSON.parse(raw);
+      if (!p || p.v !== SAVE_VERSION || !Array.isArray(p.agents)) return false;
+      // Helper: coerce to finite number or fallback
+      const fnum = (v, fb) => { const n = Number(v); return Number.isFinite(n) ? n : fb; };
+      const fint = (v, fb) => { const n = Number(v); return Number.isFinite(n) ? Math.floor(n) : fb; };
+      agents.length = 0;
+      for (const d of p.agents) {
+        if (!SPECIES[d.species]) continue;
+        const a = makeAgent(d.species, fnum(d.x, POND_W / 2), fnum(d.y, POND_H / 2));
+        Object.assign(a, d);
+        // Sanitize numeric fields against tampering / corruption
+        a.id = Math.max(1, fint(a.id, nextId++));
+        a.x = fnum(a.x, POND_W / 2);
+        a.y = fnum(a.y, POND_H / 2);
+        a.vx = fnum(a.vx, 0);
+        a.vy = fnum(a.vy, 0);
+        a.ageMs = Math.max(0, fnum(a.ageMs, 0));
+        a.lifespanMs = Math.max(1000, fnum(a.lifespanMs, 60000));
+        a.hp = Math.max(0, fnum(a.hp, hpMaxOf(a) * 0.7));
+        a.hunger = Math.max(0, fnum(a.hunger, 0));
+        a.kills = Math.max(0, fint(a.kills, 0));
+        a.trail = [];
+        a.marked = false;
+        a.dyingMs = 0;
+        a._trailAcc = 0;
+        a.curiosityNext = Math.random() * 8000;
+        if (typeof a.hungerMul !== 'number' || !Number.isFinite(a.hungerMul)) a.hungerMul = 0.6 + Math.random() * 0.8;
+        if (typeof a.roamMul !== 'number' || !Number.isFinite(a.roamMul)) a.roamMul = 0.85 + Math.random() * 0.3;
+        if (typeof a.sick !== 'boolean') a.sick = false;
+        if (typeof a.sickAgeMs !== 'number' || !Number.isFinite(a.sickAgeMs)) a.sickAgeMs = 0;
+        if (typeof a.sickDrainPerMs !== 'number' || !Number.isFinite(a.sickDrainPerMs)) a.sickDrainPerMs = 0;
+        if (typeof a.intraCdMs !== 'number' || !Number.isFinite(a.intraCdMs)) a.intraCdMs = 0;
+        if (typeof a.threatenRewardCdMs !== 'number' || !Number.isFinite(a.threatenRewardCdMs)) a.threatenRewardCdMs = 0;
+        if (typeof a.adrenRate !== 'number' || !Number.isFinite(a.adrenRate)) a.adrenRate = 0.00012 + Math.random() * 0.00016;
+        a.fightAdrenaline = 0;  // always reset on load (transient)
+        // State must be one of known values (fight/threaten/dying reset to 'play' for safety on reload)
+        const validStates = ['idle', 'play', 'flee', 'hungry', 'rest'];
+        if (!validStates.includes(a.state)) a.state = 'play';
+        // Defensive HP cap
+        const cap = hpMaxOf(a);
+        if (a.hp > cap) a.hp = cap;
+        agents.push(a);
+      }
+      foodCrumbs = (p.food || [])
+        .filter(f => f && Number.isFinite(Number(f.x)) && Number.isFinite(Number(f.y)))
+        .map(f => ({ x: fnum(f.x, 0), y: fnum(f.y, 0), ageMs: fnum(f.ageMs, 0), consumed: false }));
+      const maxId = agents.reduce((m, a) => Math.max(m, a.id), 0);
+      nextId = Math.max(fint(p.nextId, 1), maxId + 1);
+      seeds = Math.max(0, Math.min(SEED_MAX, fint(p.seeds, SEED_MAX)));
+      simTime = fnum(p.simTime, 0);
+      seasonNextCheck = fnum(p.seasonNextCheck, 60000);
+      seasonUntil = fnum(p.seasonUntil, 0);
+      if (SPECIES[p.selectedSpecies]) {
+        selectedSpecies = p.selectedSpecies;
+        for (const key in speciesBtns) speciesBtns[key].classList.toggle('active', key === selectedSpecies);
+      }
+      if (TOOLS[p.activeTool]) {
+        activeTool = p.activeTool;
+        for (const key in toolBtns) toolBtns[key].classList.toggle('active', key === activeTool);
+      }
+      if (typeof p.simSpeed === 'number' && Number.isFinite(p.simSpeed)) {
+        simSpeed = p.simSpeed;
+        elSpeed.value = Math.round(simSpeed * 100);
+        elSpeedVal.textContent = simSpeed.toFixed(2) + '×';
+      }
+      // Theme: always apply saved value, including 'calm' (which removes attribute)
+      if (typeof p.theme === 'string') {
+        if (p.theme === 'calm') {
+          document.documentElement.removeAttribute('data-theme');
+        } else {
+          document.documentElement.dataset.theme = p.theme;
+        }
+        document.querySelectorAll('.theme-switch button')
+          .forEach(b => b.classList.toggle('active', b.dataset.theme === p.theme));
+        refreshThemeColors();
+      }
+      return true;
+    } catch (_) { return false; }
+  }
+  setInterval(save, 5000);
+  window.addEventListener('beforeunload', save);
+  document.addEventListener('visibilitychange', () => { if (document.hidden) save(); });
+
+  // ============================================================
+  // Main loop
+  // ============================================================
+  function loop(tNow) {
+    const dtReal = Math.min(100, tNow - lastLoopT);
+    lastLoopT = tNow;
+
+    if (seeds < SEED_MAX && tNow - lastSeedRegen >= SEED_REGEN_MS) {
+      seeds++;
+      lastSeedRegen = tNow;
+    }
+
+    if (running) {
+      const dtSim = dtReal * simSpeed;
+      simTime += dtSim;
+
+      refreshAuraSources();
+      tickSeason(dtSim);
+      tickPlague(dtSim);
+
+      lastThink += dtSim;
+      if (lastThink >= THINK_INTERVAL_MS) {
+        for (const a of agents) think(a);
+        // Plague think runs on the same cadence; refresh living counts first in case
+        // think() has changed states (e.g. deaths during this batch).
+        if (plagueActive) {
+          for (const a of agents) thinkPlague(a);
+        }
+        lastThink = 0;
+      }
+
+      for (const a of agents) step(a, dtSim);
+      stepFood(dtSim);
+      stepEffects(dtSim);
+      checkReproduction(dtSim);
+
+      for (let i = agents.length - 1; i >= 0; i--) {
+        if (agents[i].marked) agents.splice(i, 1);
+      }
+    }
+
+    render();
+    requestAnimationFrame(loop);
+  }
+
+  // ============================================================
+  // Init
+  // ============================================================
+  // Language restoration (before load + any log calls so messages appear in the right language)
+  try {
+    const savedLang = localStorage.getItem(LANG_KEY);
+    if (savedLang === 'ja' || savedLang === 'en') currentLang = savedLang;
+  } catch (_) {}
+  applyLang();
+
+  const loaded = load();
+  if (!loaded) {
+    btnSeed.click();
+    logI18n('log.pondInit');
+  } else {
+    logI18n('log.pondResumed');
+  }
+  updateToolStatus();
+  updatePlayButton();
+  lastLoopT = performance.now();
+  lastSeedRegen = performance.now();
+  requestAnimationFrame(loop);
+})();
+</script>
+</body>
+</html>
