@@ -432,7 +432,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 
   <div class="canvas-wrap">
     <canvas id="pond" aria-label="pond canvas"></canvas>
-    <div class="season-badge" id="season-badge" data-i18n="badge.season">// mating season</div>
+    <div class="season-badge" id="season-badge" data-i18n="badge.season">// breeding season</div>
     <div class="tool-status" id="tool-status"><span class="name">release drift</span><span class="cost">·2</span></div>
     <div class="hover-info" id="hover-info"></div>
   </div>
@@ -554,7 +554,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
   const CROWD_PENALTY_MILD_MUL = 0.4;
   const CROWD_PENALTY_HARD_MUL = 0.3;
 
-  // Mating season
+  // Breeding season
   const SEASON_INTERVAL_MIN = 90000;      // ms sim time between season starts
   const SEASON_INTERVAL_MAX = 150000;
   const SEASON_DURATION_MIN = 25000;
@@ -707,7 +707,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
       'subtitle': '// four species in a quiet pond · v0.5.0',
       'stat.drift': 'drift', 'stat.dart': 'dart', 'stat.pack': 'pack', 'stat.guard': 'guard',
       'stat.seed': 'seed', 'stat.season': 'season',
-      'badge.season': '// mating season',
+      'badge.season': '// breeding season',
       'ctl.play': '▶ play', 'ctl.pause': '❚❚ pause',
       'ctl.speed': 'speed', 'ctl.clear': 'clear', 'ctl.seedPond': 'seed pond',
       'grp.species': 'species', 'grp.tool': 'tool',
@@ -751,7 +751,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
       'log.pondSeeded':'starter pond seeded',
       'log.pondInit': 'pond initialized',
       'log.pondResumed':'pond resumed',
-      'log.seasonStart':'<span class="ev-season">mating season begins</span>',
+      'log.seasonStart':'<span class="ev-season">breeding season begins</span>',
       'log.bornSuffix.season':' <span class="ev-season">(season)</span>',
       'log.bornSuffix.rare':  ' <span class="ev-season">(rare boost)</span>',
       'log.born':     'new <span class="s{0}">{1}#{2}</span> born',
@@ -803,7 +803,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
   let lastSeedRegen = 0;
   let lastReproCheck = 0;
 
-  // Mating season
+  // Breeding season
   let seasonNextCheck = 60000 + Math.random() * 30000;  // first season check window
   let seasonUntil = 0;              // simTime threshold
 
@@ -1075,7 +1075,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
   }
 
   // ============================================================
-  // Mating season
+  // Breeding season
   // ============================================================
   function tickSeason(dtSim) {
     seasonNextCheck -= dtSim;
@@ -1635,7 +1635,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
       }
     }
 
-    // Mating season — same-species attraction toward nearest mate (all species)
+    // Breeding season — same-species attraction toward nearest mate (all species)
     if (isMatingSeason() && a.state === 'play' &&
         a.ageMs > a.lifespanMs * 0.2 && a.ageMs < a.lifespanMs * 0.9) {
       let nearestMate = null, nmd2 = Infinity;
